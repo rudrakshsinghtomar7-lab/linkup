@@ -24,3 +24,12 @@
   background:#000;border:1px solid rgba(0,229,208,.3);border-radius:12px;padding:12px;margin:10px 0 14px;text-transform:uppercase}
 .swatch.emoji{background:#000;border:1px solid var(--line);font-size:20px;display:grid;place-items:center}
 .swatch.emoji.on{border-color:var(--pink)}
+/* feature tour */
+.tour .tour-ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin:6px 0 18px;
+  background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:var(--glow);color:#fff}
+.tour .tour-ic svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tour h1{font-size:28px;line-height:1.05;margin-bottom:10px}
+.tour p{font-size:14px;color:var(--ink);opacity:.85;line-height:1.55;margin-bottom:22px}
+.dots{display:flex;gap:6px;margin-bottom:18px}
+.dots i{width:8px;height:8px;border-radius:50%;background:#2a0f22;border:1px solid var(--line)}
+.dots i.on{background:var(--pink);box-shadow:0 0 10px var(--pink);border-color:transparent}

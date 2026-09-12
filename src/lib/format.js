@@ -43,6 +43,5 @@ export function friendly(err, fallback = 'Something went wrong. Try again.') {
   if (/Failed to fetch|NetworkError|network/i.test(msg)) return 'You look offline. Check your connection.'
   if (/email rate limit/i.test(msg)) return 'Sign-in emails are paused for up to an hour (sending limit reached).'
   if (/rate limit/i.test(msg)) return 'Too many attempts — give it a minute.'
-  if (/Token has expired|otp_expired|invalid/i.test(msg) && /otp|token/i.test(msg)) return 'That code is wrong or has expired.'
   return fallback
 }

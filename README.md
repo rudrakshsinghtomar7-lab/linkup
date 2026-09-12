@@ -4,6 +4,10 @@ Friends' trip-planning and coordination app. Two dashboards: **NOW** (what the c
 
 Stack: Vite + React (JavaScript) + React Router + Supabase + Mapbox GL JS + plain CSS.
 
+## Auth
+
+Email + password (Supabase). Sign-ups are auto-confirmed so no mail provider is needed to get in; only password resets send email.
+
 ## Local development
 
 ```sh

@@ -4,88 +4,90 @@ import { friendly } from '../lib/format'
 
 const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`
 
-// Read ?token_hash=…&type=… placed by the magic-link email template. The link only
-// opens the app; verification happens on a button press so inbox link-scanners
-// can't burn the one-time token, and it works in whatever browser opened it.
-function readLinkToken() {
-  const p = new URLSearchParams(window.location.search)
-  const token_hash = p.get('token_hash'); const type = p.get('type')
-  return token_hash && type ? { token_hash, type } : null
-}
-
-// Magic link + 6-digit code. The code path matters for the installed PWA on iOS,
-// where the email link opens in Safari rather than the home-screen app.
+// Email + password (same pattern as Acedex). Sign-ups are auto-confirmed on the
+// Supabase side so no email is needed to get in; only "forgot password" emails.
 export default function Login() {
+  const [mode, setMode] = useState('in') // in | up | forgot | reset
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [link, setLink] = useState(readLinkToken)
+  const [note, setNote] = useState('')
 
-  // Strip the token from the address bar once we've captured it.
+  // A password-recovery link lands here with a session + PASSWORD_RECOVERY event.
   useEffect(() => {
-    if (link) window.history.replaceState(null, '', window.location.pathname)
-  }, [link])
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') setMode('reset') })
+    return () => sub.subscription.unsubscribe()
+  }, [])
 
-  async function sendLink(e) {
+  const switchTo = (m) => { setMode(m); setError(''); setNote('') }
+
+  async function submit(e) {
     e.preventDefault()
-    setBusy(true); setError('')
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } })
+    setBusy(true); setError(''); setNote('')
+    const em = email.trim()
+    let error
+    if (mode === 'in') ({ error } = await supabase.auth.signInWithPassword({ email: em, password }))
+    else if (mode === 'up') {
+      const res = await supabase.auth.signUp({ email: em, password })
+      error = res.error
+      if (!error && !res.data.session) setNote('Account created — check your email to confirm, then sign in.')
+    }
+    else if (mode === 'forgot') {
+      ;({ error } = await supabase.auth.resetPasswordForEmail(em, { redirectTo }))
+      if (!error) setNote('If that address has an account, a reset link is on its way.')
+    }
+    else if (mode === 'reset') {
+      ;({ error } = await supabase.auth.updateUser({ password }))
+      if (!error) { setNote('Password updated.'); window.history.replaceState(null, '', window.location.pathname) }
+    }
     setBusy(false)
-    if (error) return setError(error.code === 'over_email_send_rate_limit' ? 'Sign-in emails are paused for up to an hour (sending limit reached). If you already have a code, enter it below.' : friendly(error, 'Couldn’t send the link. Check the address and try again.'))
-    setSent(true)
+    if (error) {
+      const m = error.message || ''
+      setError(/Invalid login credentials/i.test(m) ? 'Wrong email or password.'
+        : /already registered/i.test(m) ? 'That email already has an account — sign in instead.'
+        : /Password should be/i.test(m) || /at least/i.test(m) ? 'Password needs at least 8 characters.'
+        : friendly(error, 'That didn’t work. Try again.'))
+    }
   }
 
-  async function verifyCode(e) {
-    e.preventDefault()
-    setBusy(true); setError('')
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' })
-    setBusy(false)
-    if (error) setError(friendly(error, 'That code is wrong or has expired.'))
-  }
-
-  async function confirmLink() {
-    setBusy(true); setError('')
-    const { error } = await supabase.auth.verifyOtp({ token_hash: link.token_hash, type: link.type })
-    setBusy(false)
-    if (error) { setError(friendly(error, 'This link has expired or was already used. Request a new one.')); setLink(null) }
-  }
+  const copy = {
+    in: { h: 'Sign in', p: 'Welcome back. Your crew’s waiting.', cta: 'Sign in' },
+    up: { h: 'Create account', p: 'Email and a password — that’s it. You’ll set your name next.', cta: 'Create account' },
+    forgot: { h: 'Forgot password', p: 'We’ll email you a link to set a new one.', cta: 'Send reset link' },
+    reset: { h: 'New password', p: 'Pick a new password for your account.', cta: 'Save password' },
+  }[mode]
+  const needsPassword = mode !== 'forgot'
+  const needsEmail = mode !== 'reset'
 
   return (
     <div className="gate">
       <section className="card">
         <span className="word">LINK<b>UP</b></span>
         <div className="kick">Crew · trips · right now</div>
-        {link ? (<>
-          <h1>Confirm sign-in</h1>
-          <p>You opened a sign-in link. Tap below to finish signing in on this device.</p>
-          {error && <div className="state err">{error}</div>}
-          <button className="btn primary" disabled={busy} onClick={confirmLink}>{busy ? 'Signing in…' : 'Confirm sign-in'}</button>
-          <div className="sub"><button type="button" className="link" onClick={() => setLink(null)}>Not you? Start over</button></div>
-        </>) : !sent ? (
-          <form onSubmit={sendLink}>
-            <h1>Sign in</h1>
-            <p>We’ll email you a magic link and a 6-digit code. No passwords.</p>
+        <form onSubmit={submit}>
+          <h1>{copy.h}</h1>
+          <p>{copy.p}</p>
+          {needsEmail && (
             <label className="field"><span>Email</span>
               <input className="input" type="email" required autoComplete="email" inputMode="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             </label>
-            {error && <div className="state err">{error}</div>}
-            <button className="btn primary" disabled={busy || !email}>{busy ? 'Sending…' : 'Send magic link'}</button>
-            <div className="sub">Already have a code?<button type="button" className="link" disabled={!email} onClick={() => { setSent(true); setError('') }}>Enter it</button></div>
-          </form>
-        ) : (
-          <form onSubmit={verifyCode}>
-            <h1>Check your email</h1>
-            <p>Sent to <b style={{ color: 'var(--ink)' }}>{email}</b>. Tap the link, or type the 6-digit code here — handy if you’re in the installed app.</p>
-            <label className="field"><span>Code</span>
-              <input className="input code" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="one-time-code" placeholder="••••••" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+          )}
+          {needsPassword && (
+            <label className="field"><span>Password</span>
+              <input className="input" type="password" required minLength={8} autoComplete={mode === 'in' ? 'current-password' : 'new-password'} placeholder={mode === 'in' ? '••••••••' : 'at least 8 characters'} value={password} onChange={(e) => setPassword(e.target.value)} />
             </label>
-            {error && <div className="state err">{error}</div>}
-            <button className="btn primary" disabled={busy || code.length < 6}>{busy ? 'Checking…' : 'Sign in with code'}</button>
-            <div className="sub">Wrong address?<button type="button" className="link" onClick={() => { setSent(false); setCode(''); setError('') }}>Start over</button></div>
-          </form>
-        )}
+          )}
+          {error && <div className="state err">{error}</div>}
+          {note && <div className="state" style={{ color: 'var(--teal)' }}>{note}</div>}
+          <button className="btn primary" disabled={busy || (needsEmail && !email) || (needsPassword && password.length < 8)}>{busy ? 'One sec…' : copy.cta}</button>
+          {mode === 'in' && (<>
+            <div className="sub">New here?<button type="button" className="link" onClick={() => switchTo('up')}>Create an account</button></div>
+            <div className="sub" style={{ marginTop: 6 }}><button type="button" className="link" onClick={() => switchTo('forgot')}>Forgot password?</button></div>
+          </>)}
+          {mode === 'up' && <div className="sub">Already have an account?<button type="button" className="link" onClick={() => switchTo('in')}>Sign in</button></div>}
+          {mode === 'forgot' && <div className="sub"><button type="button" className="link" onClick={() => switchTo('in')}>Back to sign in</button></div>}
+        </form>
       </section>
     </div>
   )
