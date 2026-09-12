@@ -60,6 +60,9 @@ button,input,select,textarea{font-family:inherit}
 }
 .nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
 .nav button .lab{display:none}
+.nav .nav-pill{display:none}
+.nav .nav-ic{display:grid;place-items:center}
+.nav .nav-ic svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
 .nav button:hover{color:var(--pink-pale);background:rgba(255,30,121,.08)}
 .nav button.on{color:#fff;background:rgba(255,30,121,.16);box-shadow:inset 0 0 0 1px var(--line)}
 .now .nav button.on{box-shadow:none}
@@ -144,13 +147,26 @@ button,input,select,textarea{font-family:inherit}
     border-right:0;border-top:1px solid var(--line);
     background:rgba(8,1,10,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
   .rail .badge,.rail .me{display:none}
-  .nav{flex-direction:row;margin:0;width:100%;justify-content:space-around;gap:0}
-  .nav button{width:auto;flex:1;height:auto;min-height:52px;flex-direction:column;display:flex;align-items:center;justify-content:center;gap:3px;
-    border-radius:14px;padding:6px 0 4px;-webkit-tap-highlight-color:transparent}
+  /* Acedex-style bottom nav: one gradient pill glides behind the active tab
+     (position driven by --active-idx / --tab-count), icon pops, iOS press scale. */
+  .nav{flex-direction:row;margin:0;width:100%;justify-content:space-around;gap:0;position:relative;--pill-w:52px;--pill-h:34px}
+  .nav .nav-pill{display:block;position:absolute;top:5px;width:var(--pill-w);height:var(--pill-h);border-radius:calc(var(--pill-h) / 2);
+    left:calc((var(--active-idx,0) + 0.5) * (100% / var(--tab-count,4)) - (var(--pill-w) / 2));
+    background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:var(--glow);
+    transition:left .4s cubic-bezier(.4,0,.2,1),opacity .25s ease-out;pointer-events:none;z-index:1}
+  .nav[data-active="-1"] .nav-pill{opacity:0}
+  .nav button{width:auto;flex:1;height:auto;min-height:52px;flex-direction:column;display:flex;align-items:center;justify-content:flex-start;gap:4px;
+    border-radius:14px;padding:6px 0 4px;-webkit-tap-highlight-color:transparent;position:relative;z-index:2;opacity:.72;
+    transition:transform .3s cubic-bezier(.68,-.55,.265,1.55),color .25s ease-out,opacity .25s ease-out}
+  .nav button:hover{background:transparent}
   .nav button:active{transform:scale(.92)}
+  .nav button.on{background:transparent;box-shadow:none;color:#fff;opacity:1}
   .nav button.on::before{display:none}
-  .nav button .lab{display:block;font-size:11px;line-height:1.2;font-weight:600;color:var(--mute)}
-  .nav button.on .lab{color:#fff;font-weight:700}
+  .nav .nav-ic{width:32px;height:32px;transition:transform .3s cubic-bezier(.68,-.55,.265,1.55),filter .25s ease-out}
+  .nav .nav-ic svg{width:22px;height:22px}
+  .nav button.on .nav-ic{transform:scale(1.12);filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+  .nav button .lab{display:block;font-size:11px;line-height:1.2;font-weight:500;color:var(--mute);transition:color .25s ease-out,font-weight .25s ease-out,letter-spacing .25s ease-out}
+  .nav button.on .lab{color:var(--pink-pale);font-weight:700;letter-spacing:-.02em}
   .nav .tip{display:none}
   .top{gap:10px;margin-bottom:16px}
   .top .btn{padding:9px 12px;font-size:12px}

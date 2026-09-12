@@ -12,10 +12,11 @@ export default function Rail({ items, active }) {
   return (
     <aside className="rail">
       <button className="badge" onClick={() => nav('/now')} aria-label="LinkUp">L</button>
-      <nav className="nav">
+      <nav className="nav" style={{ '--active-idx': Math.max(0, items.findIndex((i) => i.key === active)), '--tab-count': items.length }} data-active={items.findIndex((i) => i.key === active)}>
+        <span className="nav-pill" aria-hidden />
         {items.map((it) => (
           <button key={it.key} className={active === it.key ? 'on' : ''} onClick={it.onClick} aria-label={it.tip}>
-            <span className="tip">{it.tip}</span>{it.icon()}<span className="lab">{it.tip}</span>
+            <span className="tip">{it.tip}</span><span className="nav-ic">{it.icon()}</span><span className="lab">{it.tip}</span>
           </button>
         ))}
       </nav>
