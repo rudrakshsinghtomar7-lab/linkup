@@ -33,7 +33,7 @@ export default function Login() {
     setBusy(true); setError('')
     const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } })
     setBusy(false)
-    if (error) return setError(error.code === 'over_email_send_rate_limit' ? 'Email limit hit for now. If you already have a code, enter it below.' : friendly(error, 'Couldn’t send the link. Check the address and try again.'))
+    if (error) return setError(error.code === 'over_email_send_rate_limit' ? 'Sign-in emails are paused for up to an hour (sending limit reached). If you already have a code, enter it below.' : friendly(error, 'Couldn’t send the link. Check the address and try again.'))
     setSent(true)
   }
 
