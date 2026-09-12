@@ -51,9 +51,15 @@
   box-shadow:0 0 14px currentColor,0 3px 8px rgba(0,0,0,.6);display:grid;place-items:center;font-weight:800;color:#fff;font-size:13px}
 .blip .label{position:absolute;top:36px;left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(8,1,10,.85);
   border:1px solid var(--line);padding:2px 8px;border-radius:7px;font-size:10px;font-weight:700;color:#fff}
+/* staleness: never show an old fix as live */
+.blip.stale{opacity:.55}
+.blip.stale .ring{animation:none;opacity:.25}
+.blip.gone{opacity:.35;filter:grayscale(1)}
+.blip.gone .ring{display:none}
+.pop .st.old{color:var(--mute)}
 /* you = GTA player chevron */
 .you{position:relative;z-index:6;width:22px;height:20px}
-.you .arrow{width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:20px solid var(--pink);
+.you .arrow{transform-origin:50% 60%;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:20px solid var(--pink);
   filter:drop-shadow(0 0 10px var(--pink))}
 .you.ghost .arrow{border-bottom-color:#a55cff;opacity:.55;filter:drop-shadow(0 0 8px #a55cff)}
 .you .cone{position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:60px;height:60px;
@@ -113,3 +119,14 @@
 
 @media(max-width:960px){.cols{grid-template-columns:1fr}}
 @media(max-width:640px){.map{height:360px}.share-pill{max-width:170px}}
+
+/* live-location states (foreground only) */
+.geo{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:18px;font-size:13px;color:var(--ink);flex-wrap:wrap}
+.geo .g{font-size:18px}
+.geo .t{flex:1;min-width:200px;line-height:1.4}
+.geo .t small{display:block;color:var(--mute);font-size:11px}
+.geo.off{border-color:rgba(154,116,136,.4)}
+.geo.on{border-color:rgba(0,229,208,.35)}
+.scope-list .btn{width:100%;justify-content:flex-start;margin-bottom:8px;text-align:left}
+.scope-list .btn.cur{border-color:var(--pink);color:#fff}
+.scope-list .btn small{margin-left:auto;color:var(--mute);font-weight:600;font-size:11px}

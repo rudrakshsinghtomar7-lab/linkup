@@ -5,7 +5,6 @@ import { Icon } from '../components/Icons'
 import { Stack } from '../components/Avatar'
 import CrewMenu from '../components/CrewMenu'
 import PlanModal from '../components/PlanModal'
-import Modal from '../components/Modal'
 import LiveMap from './now/LiveMap'
 import Plans from './now/Plans'
 import Feed from './now/Feed'
@@ -14,6 +13,8 @@ import { useToast } from '../providers/ToastProvider'
 import { usePlans } from '../hooks/usePlans'
 import { useLocations } from '../hooks/useLocations'
 import { useActivity } from '../hooks/useActivity'
+import { useLiveLocation } from '../hooks/useLiveLocation'
+import { ScopeModal, PrimerModal, GeoBar } from './now/Sharing'
 import { friendly, fmtTime } from '../lib/format'
 import '../styles/now.css'
 
@@ -35,9 +36,20 @@ export default function Now() {
   const [drop, setDrop] = useState(false)
   const [crewMenu, setCrewMenu] = useState(false)
   const [share, setShare] = useState(false)
+  const [primer, setPrimer] = useState(false)
   const [active, setActive] = useState('now')
 
+  // Clock tick (30s) so plan windows and blip staleness re-evaluate without new data.
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id) }, [])
+
   const ghost = !!loc.mine?.ghost
+  // A plan is "on" when now is between its start (or creation) and expiry.
+  const planActive = (plans.plans || []).some((p) => {
+    const start = new Date(p.starts_at || p.created_at).getTime(); const end = p.expires_at ? new Date(p.expires_at).getTime() : Infinity
+    return start <= now && now <= end
+  })
+  const live = useLiveLocation({ crewId: activeCrew.id, userId: user.id, mine: loc.mine, planActive, onWrote: loc.ping })
 
   // Ghost mode: locations.ghost on my own row. RLS decides who sees what; we only mirror our own state.
   async function toggleGhost() {
@@ -46,15 +58,20 @@ export default function Now() {
   }
 
   async function setScope(scope) {
-    try { await loc.updateMine({ share_scope: scope }); setShare(false) }
+    const patch = scope === 'hours'
+      ? { share_scope: 'hours', share_until: new Date(Date.now() + 3 * 3600_000).toISOString() }
+      : { share_scope: scope, share_until: null }
+    try { await loc.updateMine(patch); setShare(false); toast(scope === 'off' ? 'Location sharing off' : 'Sharing updated', 'ok') }
     catch (err) { toast(friendly(err, 'Couldn’t update sharing. Try again.')) }
   }
 
+  const scope = loc.mine?.share_scope || 'plan'
   const sharePill = ghost ? '👻 You are hidden from the crew'
-    : !loc.mine ? '📡 Not sharing yet · tap to choose'
-    : loc.mine.share_scope === 'always' ? '📡 Sharing always'
-    : loc.mine.share_until ? `📡 Sharing until ${fmtTime(loc.mine.share_until)} · tied to tonight's plan`
-    : '📡 Sharing only while a plan is on'
+    : live.broadcasting ? (scope === 'always' ? '📡 Live · sharing always' : scope === 'hours' ? `📡 Live until ${fmtTime(loc.mine.share_until)}` : '📡 Live · tied to the current plan')
+    : scope === 'off' ? '⏹ Sharing off'
+    : scope === 'plan' ? (planActive ? '📡 Sharing during plans · not broadcasting' : '📡 Sharing during plans · none on now')
+    : scope === 'hours' ? (loc.mine?.share_until && new Date(loc.mine.share_until) > new Date() ? `📡 Sharing until ${fmtTime(loc.mine.share_until)}` : '⏹ 3 hours are up')
+    : '📡 Sharing always · not broadcasting'
 
   const rail = [
     { key: 'now', tip: 'Now', icon: Icon.clock, onClick: () => { setActive('now'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },
@@ -85,9 +102,11 @@ export default function Now() {
           <div>You're invisible. Only you can see where you are — nobody in the crew can track you until you turn this off.</div>
         </div>
 
+        <GeoBar live={live} mine={loc.mine} planActive={planActive} onPrime={() => setPrimer(true)} onScope={() => setShare(true)} />
+
         <div className="maprow">
           <LiveMap crew={activeCrew} mine={loc.mine} others={loc.others} members={members} loading={loc.loading} error={loc.error} onReload={loc.reload}
-            ghost={ghost} sharePill={sharePill} onShareClick={() => setShare(true)} />
+            ghost={ghost} sharePill={sharePill} onShareClick={() => setShare(true)} live={live} now={now} />
         </div>
 
         <div className="cols">
@@ -98,17 +117,8 @@ export default function Now() {
 
       {drop && <PlanModal onClose={() => setDrop(false)} onCreated={plans.reload} />}
       {crewMenu && <CrewMenu onClose={() => setCrewMenu(false)} />}
-      {share && (
-        <Modal title="Location sharing" icon={<Icon.map />} onClose={() => setShare(false)}>
-          <p className="state" style={{ paddingTop: 0 }}>Live GPS lands in the next phase. Choose now when your location will be shared with {activeCrew.name}.</p>
-          <button className="btn ghost" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 8 }} disabled={loc.saving} onClick={() => setScope('plan')}>
-            📡 Only while a plan I’m in is on {loc.mine?.share_scope !== 'always' && loc.mine ? '· current' : ''}
-          </button>
-          <button className="btn ghost" style={{ width: '100%', justifyContent: 'flex-start' }} disabled={loc.saving} onClick={() => setScope('always')}>
-            🌐 Always {loc.mine?.share_scope === 'always' ? '· current' : ''}
-          </button>
-        </Modal>
-      )}
+      {share && <ScopeModal mine={loc.mine} planActive={planActive} saving={loc.saving} crewName={activeCrew.name} onPick={setScope} onClose={() => setShare(false)} />}
+      {primer && <PrimerModal crewName={activeCrew.name} onClose={() => setPrimer(false)} onEnable={() => { setPrimer(false); live.enable() }} />}
     </div>
   )
 }

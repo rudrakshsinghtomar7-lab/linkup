@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRealtime } from './useRealtime'
 
@@ -21,6 +21,20 @@ export function useLocations(crewId, userId) {
   useEffect(() => { load() }, [load])
   useRealtime('locations', `crew_id=eq.${crewId}`, load, !!crewId)
 
+  // Postgres changes are RLS-filtered, so a crewmate going ghost never reaches us as an event.
+  // A payload-free broadcast on the crew channel tells clients to refetch (RLS still decides
+  // what they get back), and a 30s poll covers anything missed.
+  const chan = useRef(null)
+  useEffect(() => {
+    if (!crewId) return
+    const ch = supabase.channel(`crew-${crewId}-locations`, { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'changed' }, () => load()).subscribe()
+    chan.current = ch
+    const poll = setInterval(load, 30_000)
+    return () => { clearInterval(poll); supabase.removeChannel(ch); chan.current = null }
+  }, [crewId, load])
+  const ping = useCallback(() => { chan.current?.send({ type: 'broadcast', event: 'changed', payload: {} }) }, [])
+
   const mine = rows?.find((r) => r.user_id === userId) ?? null
   const others = (rows || []).filter((r) => r.user_id !== userId)
 
@@ -32,8 +46,9 @@ export function useLocations(crewId, userId) {
         .upsert({ user_id: userId, crew_id: crewId, ...patch, updated_at: new Date().toISOString() }, { onConflict: 'user_id,crew_id' })
       if (error) throw error
       await load()
+      ping()
     } finally { setSaving(false) }
-  }, [userId, crewId, load])
+  }, [userId, crewId, load, ping])
 
-  return { rows, mine, others, loading: rows === null, error, reload: load, updateMine, saving }
+  return { rows, mine, others, loading: rows === null, error, reload: load, updateMine, saving, ping }
 }

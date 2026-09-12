@@ -39,20 +39,32 @@ function blipEl(person) {
   return el
 }
 
+const STALE_MS = 2 * 60_000, GONE_MS = 15 * 60_000
+// Apply staleness to a blip element from its row's updated_at. Never show an old fix as live.
+function markStale(el, row, name, now) {
+  const age = now - new Date(row.updated_at || 0).getTime()
+  const cls = age > GONE_MS ? 'gone' : age > STALE_MS ? 'stale' : ''
+  el.classList.toggle('stale', cls === 'stale'); el.classList.toggle('gone', cls === 'gone')
+  const label = el.querySelector('.label')
+  if (label) label.textContent = cls ? `${name} · last seen ${timeAgo(row.updated_at)}` : name
+}
+
 function youEl(ghost) {
   const el = document.createElement('div')
   el.className = `you ${ghost ? 'ghost' : ''}`
   el.innerHTML = '<div class="cone"></div><div class="arrow"></div>'
   return el
 }
+function orient(el, heading) { el.style.transform = heading != null ? `rotate(${heading}deg)` : '' }
 
-export default function LiveMap({ crew, mine, others, members, loading, error, onReload, ghost, sharePill, onShareClick }) {
+export default function LiveMap({ crew, mine, others, members, loading, error, onReload, ghost, sharePill, onShareClick, live, now = Date.now() }) {
   const box = useRef(); const mapRef = useRef(); const markers = useRef({}); const youRef = useRef()
   const [ready, setReady] = useState(false)
   const [sel, setSel] = useState(null) // { user_id, x, y }
   const toast = useToast()
   const byId = Object.fromEntries(members.map((m) => [m.id, m]))
   const visible = others.filter((o) => o.lat != null && o.lng != null)
+  const fresh = visible.filter((o) => now - new Date(o.updated_at || 0).getTime() <= STALE_MS).length
 
   useEffect(() => {
     if (!TOKEN || !box.current || mapRef.current) return
@@ -82,22 +94,27 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
     }
     for (const id of Object.keys(markers.current)) if (!keep.has(id)) { markers.current[id].remove(); delete markers.current[id] }
 
-    if (mine && mine.lat != null && mine.lng != null) {
-      if (!youRef.current) youRef.current = new mapboxgl.Marker({ element: youEl(ghost), anchor: 'center' }).setLngLat([mine.lng, mine.lat]).addTo(map)
-      else { youRef.current.setLngLat([mine.lng, mine.lat]); youRef.current.getElement().classList.toggle('ghost', !!ghost) }
+    for (const o of visible) markStale(markers.current[o.user_id].getElement(), o, byId[o.user_id]?.display_name || '?', now)
+
+    const me = live?.position ? live.position : (mine && mine.lat != null && mine.lng != null ? { lat: mine.lat, lng: mine.lng, heading: null } : null)
+    if (me) {
+      if (!youRef.current) youRef.current = new mapboxgl.Marker({ element: youEl(ghost), anchor: 'center', rotationAlignment: 'map' }).setLngLat([me.lng, me.lat]).addTo(map)
+      else youRef.current.setLngLat([me.lng, me.lat])
+      const el = youRef.current.getElement(); el.classList.toggle('ghost', !!ghost); orient(el.querySelector('.arrow'), me.heading)
     } else if (youRef.current) { youRef.current.remove(); youRef.current = null }
-  }, [visible, mine, ghost, ready, members]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visible, mine, ghost, ready, members, live?.position, now]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // First time we have points, frame them.
   const framed = useRef(false)
   useEffect(() => {
     const map = mapRef.current; if (!map || !ready || framed.current) return
-    const pts = [...visible.map((o) => [o.lng, o.lat]), ...(mine?.lat != null && mine?.lng != null ? [[mine.lng, mine.lat]] : [])]
+    const me = live?.position || (mine?.lat != null && mine?.lng != null ? mine : null)
+    const pts = [...visible.map((o) => [o.lng, o.lat]), ...(me ? [[me.lng, me.lat]] : [])]
     if (!pts.length) return
     framed.current = true
     if (pts.length === 1) map.jumpTo({ center: pts[0], zoom: 13 })
     else { const b = pts.reduce((bb, p) => bb.extend(p), new mapboxgl.LngLatBounds(pts[0], pts[0])); map.fitBounds(b, { padding: 80, maxZoom: 14, duration: 0 }) }
-  }, [visible, mine, ready])
+  }, [visible, mine, live?.position, ready])
 
   const selRow = sel && visible.find((o) => o.user_id === sel.user_id)
   const selPos = selRow && mapRef.current ? mapRef.current.project([selRow.lng, selRow.lat]) : null
@@ -112,7 +129,7 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
       <div className="vig"></div>
 
       <div className="hud tl">
-        <div className="live"><span className="pulse"></span> {loading ? 'Finding the crew…' : `${visible.length} friend${visible.length === 1 ? '' : 's'} sharing`}</div>
+        <div className="live"><span className="pulse"></span> {loading ? 'Finding the crew…' : `${fresh} friend${fresh === 1 ? '' : 's'} sharing`}</div>
       </div>
       <div className="hud tr">
         <button className={`share-pill ${ghost ? 'ghosted' : ''}`} onClick={onShareClick} title="Change sharing scope">{sharePill}</button>
@@ -126,7 +143,7 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
       {selRow && selPos && (
         <div className="pop" style={{ left: selPos.x, top: selPos.y - 16 }} onClick={(e) => e.stopPropagation()}>
           <b>{byId[selRow.user_id]?.display_name || 'Crew member'}</b>
-          <div className="st">🟢 {selRow.status || 'Sharing location'}</div>
+          {(() => { const age = now - new Date(selRow.updated_at || 0).getTime(); return <div className={`st ${age > STALE_MS ? 'old' : ''}`}>{age > STALE_MS ? '⚪ Last known spot' : `🟢 ${selRow.status || 'Sharing live'}`}</div> })()}
           <small>Last updated {timeAgo(selRow.updated_at)}</small>
           <div className="row">
             <button className="mini" onClick={() => toast('Pings land in a later phase.', 'ok')}>Ping</button>
