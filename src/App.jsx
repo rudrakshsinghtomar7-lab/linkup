@@ -4,6 +4,7 @@ import { ToastProvider } from './providers/ToastProvider'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import CrewGate from './pages/CrewGate'
+import Trips from './pages/Trips'
 import './styles/auth.css'
 
 function Splash() {
@@ -39,6 +40,7 @@ export default function App() {
         <Gate>
           <Routes>
             <Route path="/" element={<Navigate to="/now" replace />} />
+            <Route path="/trips" element={<Trips />} />
             <Route path="*" element={<Placeholder />} />
           </Routes>
         </Gate>

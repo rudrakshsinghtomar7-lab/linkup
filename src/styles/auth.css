@@ -22,3 +22,5 @@
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .invite{font-family:'Archivo';font-weight:900;font-size:28px;letter-spacing:4px;color:var(--teal);text-align:center;
   background:#000;border:1px solid rgba(0,229,208,.3);border-radius:12px;padding:12px;margin:10px 0 14px;text-transform:uppercase}
+.swatch.emoji{background:#000;border:1px solid var(--line);font-size:20px;display:grid;place-items:center}
+.swatch.emoji.on{border-color:var(--pink)}
