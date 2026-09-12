@@ -22,26 +22,15 @@ function Gate({ children }) {
   return children
 }
 
-function Placeholder() {
-  const { signOut, profile } = useSession()
-  return (
-    <div className="gate"><div className="card">
-      <span className="word">LINK<b>UP</b></span>
-      <p>Signed in as {profile?.display_name}. Dashboards coming next.</p>
-      <button className="btn ghost" onClick={signOut}>Sign out</button>
-    </div></div>
-  )
-}
-
 export default function App() {
   return (
     <SessionProvider>
       <ToastProvider>
         <Gate>
           <Routes>
-            <Route path="/" element={<Navigate to="/now" replace />} />
+            <Route path="/" element={<Navigate to="/trips" replace />} />
             <Route path="/trips" element={<Trips />} />
-            <Route path="*" element={<Placeholder />} />
+            <Route path="*" element={<Navigate to="/trips" replace />} />
           </Routes>
         </Gate>
       </ToastProvider>
