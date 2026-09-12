@@ -3,6 +3,7 @@ import { SessionProvider, useSession } from './providers/SessionProvider'
 import { ToastProvider } from './providers/ToastProvider'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
+import CrewGate from './pages/CrewGate'
 import './styles/auth.css'
 
 function Splash() {
@@ -11,11 +12,12 @@ function Splash() {
 
 // Gate order: session → onboarding → crew → app.
 function Gate({ children }) {
-  const { session, needsOnboarding, crews } = useSession()
+  const { session, needsOnboarding, crews, activeCrew } = useSession()
   if (session === undefined) return <Splash />
   if (!session) return <Login />
   if (needsOnboarding) return <Onboarding />
   if (crews === null) return <Splash />
+  if (!activeCrew) return <CrewGate />
   return children
 }
 
