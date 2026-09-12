@@ -31,6 +31,10 @@ npm install
 npm run dev
 ```
 
+## Smoke test
+
+`SMOKE_EMAIL=… SMOKE_PASSWORD=… npm run smoke` drives the live site in headless Chromium (needs `npx playwright install chromium` once): deep-link fallback, login, both dashboards, ghost round-trip, session across refresh, 390px overflow, manifest.
+
 ## Deployment
 
 Pushes to `main` build and deploy to GitHub Pages via `.github/workflows/deploy.yml`. The three `VITE_*` values are injected from repository secrets at build time. Live: https://rudrakshsinghtomar7-lab.github.io/linkup/
