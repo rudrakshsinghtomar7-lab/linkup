@@ -1,4 +1,140 @@
-/* Global styles are ported from the LinkUp mockups (linkup-dashboard.html / linkup-now.html). */
-* { box-sizing: border-box; }
-html, body, #root { margin: 0; min-height: 100%; }
-body { background: #000; color: #fff; overflow-x: hidden; }
+/* ============================================================
+   LinkUp global styles — ported verbatim from the mockups
+   (mockups/linkup-dashboard.html + mockups/linkup-now.html).
+   Shared tokens, rail, top bar, buttons, cards, avatar stacks.
+   ============================================================ */
+:root{
+  --void:#08010a;
+  --panel:#160a14;
+  --panel-2:#1f0c1a;
+  --line:rgba(255,30,121,.18);
+  --pink:#ff1e79;
+  --pink-soft:#ff5fa2;
+  --pink-pale:#f7c1d9;
+  --orange:#ff8a3d;
+  --teal:#00e5d0;
+  --ink:#efd9e6;
+  --mute:#9a7488;
+  --glow:0 0 24px rgba(255,30,121,.45);
+  --land:#0d0710;--water:#05070f;--road:#2a1220;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body,#root{min-height:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:
+    radial-gradient(1100px 600px at 82% -10%, rgba(255,138,61,.10), transparent 60%),
+    radial-gradient(900px 700px at -5% 110%, rgba(0,229,208,.08), transparent 55%),
+    radial-gradient(1200px 900px at 50% 40%, rgba(255,30,121,.07), transparent 70%),
+    var(--void);
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:var(--pink);color:#fff}
+button,input,select,textarea{font-family:inherit}
+.app{display:grid;grid-template-columns:76px 1fr;min-height:100vh}
+
+/* ---- HUD sidebar ---- */
+.rail{
+  position:sticky;top:0;height:100vh;
+  background:linear-gradient(180deg,#12040f,#0a020a);
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;
+  padding:18px 0;gap:8px;z-index:20;
+}
+.badge{
+  width:44px;height:44px;border-radius:13px;display:grid;place-items:center;
+  font-family:'Archivo';font-weight:900;font-style:italic;font-size:20px;color:#fff;
+  background:linear-gradient(135deg,var(--pink),var(--orange));
+  box-shadow:var(--glow);margin-bottom:10px;letter-spacing:-1px;
+  border:0;cursor:pointer;
+}
+.nav{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.nav button{
+  width:46px;height:46px;border:0;border-radius:13px;background:transparent;
+  color:var(--mute);cursor:pointer;display:grid;place-items:center;
+  transition:.18s;position:relative;
+}
+.nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav button:hover{color:var(--pink-pale);background:rgba(255,30,121,.08)}
+.nav button.on{color:#fff;background:rgba(255,30,121,.16);box-shadow:inset 0 0 0 1px var(--line)}
+.now .nav button.on{box-shadow:none}
+.nav button.on::before{content:"";position:absolute;left:-18px;top:11px;bottom:11px;width:3px;border-radius:3px;background:var(--pink);box-shadow:var(--glow)}
+.nav .tip{position:absolute;left:56px;white-space:nowrap;background:#000;border:1px solid var(--line);
+  padding:5px 9px;border-radius:8px;font-size:12px;color:var(--ink);opacity:0;pointer-events:none;transform:translateX(-6px);transition:.15s;z-index:30}
+.nav button:hover .tip{opacity:1;transform:translateX(0)}
+.me{margin-top:auto;width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,#ff5fa2,#7b1030);border:2px solid var(--pink);
+  display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px;cursor:pointer}
+
+/* ---- main ---- */
+.main{padding:22px 26px 60px;max-width:1320px;width:100%;min-width:0}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.word{font-family:'Archivo';font-style:italic;font-weight:900;font-size:26px;letter-spacing:-1px;color:#fff;text-decoration:none;cursor:pointer}
+.word b{color:var(--pink);text-shadow:var(--glow)}
+.spacer{flex:1}
+.stack{display:flex;cursor:pointer}
+.stack .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--void);margin-left:-9px;
+  display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff}
+.stack .av:first-child{margin-left:0}
+.btn{border:0;cursor:pointer;font-family:'Inter';font-weight:700;font-size:13px;
+  border-radius:11px;padding:10px 15px;display:inline-flex;align-items:center;gap:7px;transition:.18s}
+.btn.primary{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;box-shadow:var(--glow)}
+.btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--pink);color:#fff}
+.btn:disabled{opacity:.6;cursor:progress;transform:none}
+
+/* ---- cards ---- */
+.card{background:linear-gradient(180deg,var(--panel),#100610);border:1px solid var(--line);
+  border-radius:20px;padding:20px;position:relative;min-width:0}
+.card:hover{border-color:rgba(255,30,121,.4)}
+.card h2{font-family:'Archivo';font-weight:800;font-size:16px;letter-spacing:.2px;display:flex;align-items:center;gap:9px}
+.card h2 .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  background:rgba(255,30,121,.14);color:var(--pink)}
+.card h2 .ic svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.link{color:var(--pink-soft);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;background:none;border:0;padding:0}
+.link:hover{color:var(--pink)}
+
+/* ---- async states (same tokens as the mockups' muted copy) ---- */
+.state{font-size:12px;color:var(--mute);padding:14px 4px;line-height:1.5}
+.state.err{color:var(--pink-soft)}
+.state .link{margin-left:6px}
+
+/* ---- toast ---- */
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:90;
+  background:linear-gradient(180deg,var(--panel),#0d0610);border:1px solid var(--pink);border-radius:14px;
+  padding:11px 16px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.6);max-width:min(92vw,420px)}
+.toast.ok{border-color:rgba(0,229,208,.5)}
+
+/* ---- modal (built from the mockups' .pop / .card treatment) ---- */
+.overlay{position:fixed;inset:0;background:rgba(8,1,10,.7);backdrop-filter:blur(6px);z-index:80;
+  display:grid;place-items:center;padding:16px}
+.modal{width:100%;max-width:420px;background:linear-gradient(180deg,var(--panel),#0d0610);border:1px solid var(--pink);
+  border-radius:20px;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.6);max-height:calc(100vh - 32px);overflow:auto}
+.modal h3{font-family:'Archivo';font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+.field{display:block;margin-bottom:12px}
+.field span{display:block;font-size:11px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.input{width:100%;background:#000;border:1px solid var(--line);border-radius:11px;color:var(--ink);
+  padding:11px 13px;font-size:14px;outline:none;transition:.15s;-webkit-appearance:none}
+.input:focus{border-color:var(--pink)}
+.input::placeholder{color:var(--mute)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+
+@media(max-width:640px){
+  .app{grid-template-columns:1fr}
+  .rail{position:fixed;bottom:0;top:auto;left:0;right:0;height:64px;width:100%;flex-direction:row;
+    justify-content:space-around;padding:0 8px;border-right:0;border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom)}
+  .rail .badge,.rail .me{display:none}
+  .nav{flex-direction:row;margin:0}
+  .nav button.on::before{display:none}
+  .nav .tip{display:none}
+  .main{padding:18px 14px 90px}
+  .toast{bottom:80px}
+}

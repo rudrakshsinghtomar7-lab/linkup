@@ -1,0 +1,24 @@
+/* Auth / onboarding / crew gate — no mockup exists for these screens, so they are
+   composed strictly from the dashboards' tokens: .card, .btn, .word, .input. */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.gate .card{width:100%;max-width:400px;padding:26px 24px}
+.gate .word{font-size:34px;display:block;margin-bottom:6px}
+.gate .kick{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mute);margin-bottom:22px}
+.gate h1{font-family:'Archivo';font-style:italic;font-weight:900;font-size:26px;letter-spacing:-.5px;color:#fff;line-height:1;margin-bottom:6px}
+.gate p{font-size:13px;color:var(--mute);line-height:1.5;margin-bottom:18px}
+.gate .btn{width:100%;justify-content:center;padding:13px 15px;font-size:14px}
+.gate .btn + .btn{margin-top:8px}
+.gate .sub{margin-top:16px;text-align:center;font-size:12px;color:var(--mute)}
+.gate .sub .link{margin-left:4px}
+.code{font-family:'Archivo';font-weight:900;font-size:26px;letter-spacing:8px;text-align:center}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.swatch{width:40px;height:40px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:.15s;padding:0}
+.swatch.on{border-color:#fff;box-shadow:var(--glow);transform:scale(1.08)}
+.preview{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.preview .av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;font-size:16px;border:2px solid var(--pink)}
+.preview strong{font-size:15px;display:block}
+.preview small{color:var(--mute);font-size:11px}
+.or{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin:18px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.invite{font-family:'Archivo';font-weight:900;font-size:28px;letter-spacing:4px;color:var(--teal);text-align:center;
+  background:#000;border:1px solid rgba(0,229,208,.3);border-radius:12px;padding:12px;margin:10px 0 14px;text-transform:uppercase}

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINKUP — trip dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,500;0,700;0,800;0,900;1,800;1,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#08010a;
+    --panel:#160a14;
+    --panel-2:#1f0c1a;
+    --line:rgba(255,30,121,.18);
+    --pink:#ff1e79;
+    --pink-soft:#ff5fa2;
+    --pink-pale:#f7c1d9;
+    --orange:#ff8a3d;
+    --teal:#00e5d0;
+    --ink:#efd9e6;
+    --mute:#9a7488;
+    --glow:0 0 24px rgba(255,30,121,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:
+      radial-gradient(1100px 600px at 82% -10%, rgba(255,138,61,.10), transparent 60%),
+      radial-gradient(900px 700px at -5% 110%, rgba(0,229,208,.08), transparent 55%),
+      radial-gradient(1200px 900px at 50% 40%, rgba(255,30,121,.07), transparent 70%),
+      var(--void);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--pink);color:#fff}
+  .app{display:grid;grid-template-columns:76px 1fr;min-height:100vh}
+
+  /* ---- HUD sidebar ---- */
+  .rail{
+    position:sticky;top:0;height:100vh;
+    background:linear-gradient(180deg,#12040f,#0a020a);
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;
+    padding:18px 0;gap:8px;z-index:20;
+  }
+  .badge{
+    width:44px;height:44px;border-radius:13px;display:grid;place-items:center;
+    font-family:'Archivo';font-weight:900;font-style:italic;font-size:20px;color:#fff;
+    background:linear-gradient(135deg,var(--pink),var(--orange));
+    box-shadow:var(--glow);margin-bottom:10px;letter-spacing:-1px;
+  }
+  .nav{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  .nav button{
+    width:46px;height:46px;border:0;border-radius:13px;background:transparent;
+    color:var(--mute);cursor:pointer;display:grid;place-items:center;
+    transition:.18s;position:relative;
+  }
+  .nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .nav button:hover{color:var(--pink-pale);background:rgba(255,30,121,.08)}
+  .nav button.on{color:#fff;background:rgba(255,30,121,.16);box-shadow:inset 0 0 0 1px var(--line)}
+  .nav button.on::before{content:"";position:absolute;left:-18px;top:11px;bottom:11px;width:3px;border-radius:3px;background:var(--pink);box-shadow:var(--glow)}
+  .nav .tip{position:absolute;left:56px;white-space:nowrap;background:#000;border:1px solid var(--line);
+    padding:5px 9px;border-radius:8px;font-size:12px;color:var(--ink);opacity:0;pointer-events:none;transform:translateX(-6px);transition:.15s;z-index:30}
+  .nav button:hover .tip{opacity:1;transform:translateX(0)}
+  .me{margin-top:auto;width:40px;height:40px;border-radius:50%;
+    background:linear-gradient(135deg,#ff5fa2,#7b1030);border:2px solid var(--pink);
+    display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px}
+
+  /* ---- main ---- */
+  .main{padding:22px 26px 60px;max-width:1320px}
+  .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .word{font-family:'Archivo';font-style:italic;font-weight:900;font-size:26px;letter-spacing:-1px;color:#fff}
+  .word b{color:var(--pink);text-shadow:var(--glow)}
+  .switch{
+    display:flex;align-items:center;gap:9px;background:var(--panel);
+    border:1px solid var(--line);border-radius:999px;padding:7px 8px 7px 15px;cursor:pointer;transition:.18s}
+  .switch:hover{border-color:var(--pink)}
+  .switch .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
+  .switch small{color:var(--mute);font-size:11px;display:block;line-height:1}
+  .switch strong{font-size:14px;font-weight:700}
+  .switch .chev{color:var(--mute)}
+  .spacer{flex:1}
+  .stack{display:flex}
+  .stack .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--void);margin-left:-9px;
+    display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff}
+  .stack .av:first-child{margin-left:0}
+  .btn{border:0;cursor:pointer;font-family:'Inter';font-weight:700;font-size:13px;
+    border-radius:11px;padding:10px 15px;display:inline-flex;align-items:center;gap:7px;transition:.18s}
+  .btn.primary{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;box-shadow:var(--glow)}
+  .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--pink);color:#fff}
+
+  /* ---- hero ---- */
+  .hero{
+    position:relative;border-radius:22px;overflow:hidden;padding:30px 32px;margin-bottom:22px;
+    background:linear-gradient(115deg,#ff1e79 0%,#ff4d8d 32%,#ff8a3d 78%,#ffc24d 100%);
+    box-shadow:0 20px 60px rgba(255,30,121,.28);
+  }
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0 2px,transparent 2px 4px),
+      radial-gradient(600px 260px at 88% 120%, rgba(8,1,10,.55), transparent 60%);}
+  .hero .sun{position:absolute;right:-40px;top:-60px;width:300px;height:300px;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.7),rgba(255,214,140,.15) 55%,transparent 70%);filter:blur(6px)}
+  .hero-in{position:relative;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+  .kick{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.85)}
+  .hero h1{font-family:'Archivo';font-style:italic;font-weight:900;font-size:44px;line-height:.95;letter-spacing:-1.5px;margin:6px 0 10px;text-shadow:0 3px 20px rgba(90,0,30,.4)}
+  .hero .meta{display:flex;gap:18px;font-size:13px;font-weight:600;opacity:.95;flex-wrap:wrap}
+  .hero .meta span{display:flex;align-items:center;gap:6px}
+  .count{display:flex;gap:10px}
+  .count .cell{background:rgba(8,1,10,.42);border:1px solid rgba(255,255,255,.25);border-radius:14px;
+    padding:12px 14px;text-align:center;min-width:64px;backdrop-filter:blur(4px)}
+  .count .cell b{font-family:'Archivo';font-weight:900;font-size:28px;display:block;line-height:1}
+  .count .cell small{font-size:10px;letter-spacing:1px;text-transform:uppercase;opacity:.8}
+
+  /* ---- grid ---- */
+  .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+  .card{background:linear-gradient(180deg,var(--panel),#100610);border:1px solid var(--line);
+    border-radius:20px;padding:20px;position:relative}
+  .card:hover{border-color:rgba(255,30,121,.4)}
+  .card h2{font-family:'Archivo';font-weight:800;font-size:16px;letter-spacing:.2px;display:flex;align-items:center;gap:9px}
+  .card h2 .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(255,30,121,.14);color:var(--pink)}
+  .card h2 .ic svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .link{color:var(--pink-soft);font-size:12px;font-weight:700;text-decoration:none;cursor:pointer}
+  .link:hover{color:var(--pink)}
+
+  /* places + voting */
+  .place{display:flex;gap:13px;align-items:center;padding:12px;border-radius:14px;
+    background:var(--panel-2);border:1px solid transparent;transition:.18s;margin-bottom:10px}
+  .place:hover{border-color:var(--line);transform:translateX(2px)}
+  .place .thumb{width:62px;height:62px;border-radius:12px;flex:none;background-size:cover;background-position:center;
+    box-shadow:0 6px 16px rgba(0,0,0,.4)}
+  .place .info{flex:1;min-width:0}
+  .place .info strong{font-size:14px;font-weight:700;display:block}
+  .place .info small{color:var(--mute);font-size:12px}
+  .tagrow{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+  .tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(0,229,208,.12);color:var(--teal)}
+  .tag.warm{background:rgba(255,138,61,.14);color:var(--orange)}
+  .vote{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .vote button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#000;
+    color:var(--pink);cursor:pointer;font-size:18px;display:grid;place-items:center;transition:.15s}
+  .vote button:hover{background:var(--pink);color:#fff;box-shadow:var(--glow);transform:scale(1.06)}
+  .vote button.voted{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;border-color:transparent}
+  .vote b{font-family:'Archivo';font-weight:900;font-size:17px}
+  .vote small{font-size:9px;color:var(--mute);letter-spacing:.5px}
+
+  .poll{margin-top:4px}
+  .bar-row{margin-bottom:13px}
+  .bar-row .lab{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+  .bar-row .lab strong{font-weight:600;color:var(--ink)}
+  .bar-row .lab span{color:var(--pink-soft);font-weight:700}
+  .track{height:9px;border-radius:6px;background:#2a0f22;overflow:hidden}
+  .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--pink),var(--orange));
+    box-shadow:0 0 12px rgba(255,30,121,.5);transition:width .7s cubic-bezier(.2,.9,.3,1)}
+
+  /* photo wall */
+  .wall{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .shot{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background-size:cover;background-position:center;cursor:pointer}
+  .shot::after{content:attr(data-res);position:absolute;left:7px;bottom:7px;font-size:9px;font-weight:700;
+    background:rgba(8,1,10,.7);color:var(--teal);padding:2px 6px;border-radius:5px;border:1px solid rgba(0,229,208,.3)}
+  .shot:hover{outline:2px solid var(--pink);outline-offset:-2px}
+  .shot.add{display:grid;place-items:center;background:var(--panel-2);border:1.5px dashed var(--line);color:var(--pink-soft)}
+  .shot.add:hover{border-color:var(--pink);color:var(--pink);outline:none}
+  .shot.add span{font-size:11px;font-weight:700;text-align:center;line-height:1.3}
+
+  /* availability */
+  .cal{width:100%;border-collapse:separate;border-spacing:6px 6px}
+  .cal th{font-size:10px;color:var(--mute);font-weight:700;text-transform:uppercase;padding-bottom:2px}
+  .cal td.name{font-size:12px;font-weight:600;text-align:left;color:var(--ink);white-space:nowrap;padding-right:4px}
+  .slot{width:100%;height:26px;border-radius:7px;background:#241021;border:1px solid transparent;cursor:pointer;transition:.15s}
+  .slot.free{background:linear-gradient(135deg,rgba(0,229,208,.85),rgba(0,229,208,.45));box-shadow:0 0 10px rgba(0,229,208,.35)}
+  .slot.free.hot{background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:0 0 12px rgba(255,30,121,.5)}
+  .slot:hover{border-color:var(--pink)}
+  .legend{display:flex;gap:14px;margin-top:12px;font-size:11px;color:var(--mute);flex-wrap:wrap}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:5px;vertical-align:-2px}
+
+  /* expenses */
+  .bal{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid rgba(255,30,121,.08)}
+  .bal:last-of-type{border:0}
+  .bal .av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px;flex:none}
+  .bal .who{flex:1;font-size:13px}
+  .bal .who small{color:var(--mute);display:block;font-size:11px}
+  .amt{font-family:'Archivo';font-weight:900;font-size:16px}
+  .amt.owe{color:var(--pink)}
+  .amt.get{color:var(--teal)}
+  .settle{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center}
+  .settle .total small{color:var(--mute);font-size:11px;display:block}
+  .settle .total b{font-family:'Archivo';font-weight:900;font-size:22px}
+
+  .full{grid-column:1/-1}
+  @media(max-width:960px){
+    .grid{grid-template-columns:1fr}
+    .hero h1{font-size:34px}
+  }
+  @media(max-width:640px){
+    .app{grid-template-columns:1fr}
+    .rail{position:fixed;bottom:0;top:auto;left:0;right:0;height:64px;width:100%;flex-direction:row;
+      justify-content:space-around;padding:0 8px;border-right:0;border-top:1px solid var(--line)}
+    .rail .badge,.rail .me{display:none}
+    .nav{flex-direction:row;margin:0}
+    .nav button.on::before{display:none}
+    .nav .tip{display:none}
+    .main{padding:18px 14px 90px}
+    .wall{grid-template-columns:repeat(3,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- HUD rail -->
+  <aside class="rail">
+    <div class="badge">L</div>
+    <nav class="nav">
+      <button class="on"><span class="tip">Dashboard</span><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></button>
+      <button><span class="tip">Places</span><svg viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+      <button><span class="tip">Voting</span><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+      <button><span class="tip">Photos</span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5L5 20"/></svg></button>
+      <button><span class="tip">Calendar</span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
+      <button><span class="tip">Money</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5a2.5 2 0 0 1 5 .3M14.5 14.5a2.5 2 0 0 1-5-.3"/></svg></button>
+    </nav>
+    <div class="me">RS</div>
+  </aside>
+
+  <!-- main -->
+  <main class="main">
+    <div class="top">
+      <div class="word">LINK<b>UP</b></div>
+      <div class="switch">
+        <span class="dot"></span>
+        <div><small>Active trip</small><strong>Gold Coast · Winter '26</strong></div>
+        <span class="chev">▾</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="stack">
+        <div class="av" style="background:linear-gradient(135deg,#ff5fa2,#7b1030)">R</div>
+        <div class="av" style="background:linear-gradient(135deg,#00e5d0,#065f57)">A</div>
+        <div class="av" style="background:linear-gradient(135deg,#ff8a3d,#7a3a10)">J</div>
+        <div class="av" style="background:linear-gradient(135deg,#a55cff,#3a1466)">M</div>
+        <div class="av" style="background:#2a0f22;color:var(--pink-soft);font-size:11px">+3</div>
+      </div>
+      <button class="btn ghost">＋ Invite</button>
+      <button class="btn primary">＋ New plan</button>
+    </div>
+
+    <!-- hero -->
+    <section class="hero">
+      <div class="sun"></div>
+      <div class="hero-in">
+        <div>
+          <div class="kick">Next up · locked in by the crew</div>
+          <h1>Gold Coast<br>road trip</h1>
+          <div class="meta">
+            <span>📍 Surfers Paradise → Byron Bay</span>
+            <span>🗓 Fri 26 Jun – Sun 28 Jun</span>
+            <span>👥 7 going</span>
+          </div>
+        </div>
+        <div class="count" id="count">
+          <div class="cell"><b id="d">--</b><small>days</small></div>
+          <div class="cell"><b id="h">--</b><small>hrs</small></div>
+          <div class="cell"><b id="m">--</b><small>min</small></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- grid -->
+    <div class="grid">
+
+      <!-- PLACES + VOTE -->
+      <section class="card">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Places to visit</h2>
+          <a class="link">＋ Suggest a spot</a>
+        </div>
+        <div id="places"></div>
+      </section>
+
+      <!-- VOTING RESULTS -->
+      <section class="card">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>Live poll</h2>
+          <a class="link">See all votes</a>
+        </div>
+        <div class="poll" id="poll"></div>
+      </section>
+
+      <!-- PHOTO WALL -->
+      <section class="card">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 16l-5-5L5 20"/></svg></span>Trip photos</h2>
+          <a class="link">Full-res album</a>
+        </div>
+        <div class="wall">
+          <div class="shot" data-res="4K" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400')"></div>
+          <div class="shot" data-res="RAW" style="background-image:url('https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400')"></div>
+          <div class="shot" data-res="4K" style="background-image:url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400')"></div>
+          <div class="shot" data-res="6K" style="background-image:url('https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=400')"></div>
+          <div class="shot" data-res="RAW" style="background-image:url('https://images.unsplash.com/photo-1520454974749-611b7248ffdb?w=400')"></div>
+          <div class="shot add"><span>＋<br>Upload<br>hi-res</span></div>
+        </div>
+      </section>
+
+      <!-- AVAILABILITY -->
+      <section class="card">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span>Who's free</h2>
+          <a class="link">Suggest a date</a>
+        </div>
+        <table class="cal">
+          <thead><tr><th></th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th>Mon</th></tr></thead>
+          <tbody id="cal"></tbody>
+        </table>
+        <div class="legend">
+          <span><i style="background:#241021;border:1px solid var(--line)"></i>Busy</span>
+          <span><i style="background:linear-gradient(135deg,#00e5d0,#065f57)"></i>Free</span>
+          <span><i style="background:linear-gradient(135deg,var(--pink),var(--orange))"></i>Everyone free</span>
+        </div>
+      </section>
+
+      <!-- EXPENSES (full width) -->
+      <section class="card full">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5a2.5 2 0 0 1 5 .3M14.5 14.5a2.5 2 0 0 1-5-.3"/></svg></span>Who owes who</h2>
+          <a class="link">＋ Add an expense</a>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px" id="expwrap">
+          <div id="balances"></div>
+          <div>
+            <div id="recent"></div>
+            <div class="settle">
+              <div class="total"><small>Your balance</small><b class="amt owe">− $84.50</b></div>
+              <button class="btn primary">Settle up</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  /* ---------- countdown ---------- */
+  const target = new Date();
+  target.setDate(target.getDate() + 14);
+  target.setHours(9,0,0,0);
+  function tick(){
+    const t = target - new Date();
+    const d = Math.max(0,Math.floor(t/864e5));
+    const h = Math.max(0,Math.floor(t%864e5/36e5));
+    const m = Math.max(0,Math.floor(t%36e5/6e4));
+    document.getElementById('d').textContent = String(d).padStart(2,'0');
+    document.getElementById('h').textContent = String(h).padStart(2,'0');
+    document.getElementById('m').textContent = String(m).padStart(2,'0');
+  }
+  tick(); setInterval(tick,30000);
+
+  /* ---------- places + voting (linked) ---------- */
+  const places = [
+    {id:'byron', name:'Byron Bay lighthouse', loc:'Cape Byron · sunrise walk', tags:['Nature','Free'], votes:6, img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200'},
+    {id:'surf',  name:'Surfers Paradise beach', loc:'The strip · nightlife', tags:['Beach','$$'], votes:5, img:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200'},
+    {id:'park',  name:'Movie World', loc:'Theme park · full day', tags:['Rides','$$$'], votes:4, img:'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=200'},
+    {id:'hinter',name:'Hinterland falls', loc:'Springbrook · hiking', tags:['Nature','Free'], votes:3, img:'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=200'},
+  ];
+  const voted = new Set();
+
+  function tagHtml(t){
+    const warm = ['$$','$$$','Rides','Beach'].includes(t);
+    return `<span class="tag ${warm?'warm':''}">${t}</span>`;
+  }
+  function renderPlaces(){
+    document.getElementById('places').innerHTML = places.map(p=>`
+      <div class="place">
+        <div class="thumb" style="background-image:url('${p.img}')"></div>
+        <div class="info">
+          <strong>${p.name}</strong>
+          <small>${p.loc}</small>
+          <div class="tagrow">${p.tags.map(tagHtml).join('')}</div>
+        </div>
+        <div class="vote">
+          <button data-id="${p.id}" class="${voted.has(p.id)?'voted':''}">▲</button>
+          <b>${p.votes}</b><small>VOTES</small>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('.vote button').forEach(b=>{
+      b.onclick = ()=>{
+        const p = places.find(x=>x.id===b.dataset.id);
+        if(voted.has(p.id)){voted.delete(p.id);p.votes--;}
+        else{voted.add(p.id);p.votes++;}
+        renderPlaces(); renderPoll();
+      };
+    });
+  }
+  function renderPoll(){
+    const max = Math.max(...places.map(p=>p.votes),1);
+    const sorted = [...places].sort((a,b)=>b.votes-a.votes);
+    document.getElementById('poll').innerHTML = sorted.map(p=>`
+      <div class="bar-row">
+        <div class="lab"><strong>${p.name.split(' ').slice(0,2).join(' ')}</strong><span>${p.votes} votes</span></div>
+        <div class="track"><div class="fill" style="width:${p.votes/max*100}%"></div></div>
+      </div>`).join('');
+  }
+  renderPlaces(); renderPoll();
+
+  /* ---------- availability ---------- */
+  const people = [
+    {n:'Rudy', c:'#ff5fa2'}, {n:'Aria', c:'#00e5d0'}, {n:'Jai', c:'#ff8a3d'},
+    {n:'Mia', c:'#a55cff'}, {n:'Sam', c:'#ff1e79'}
+  ];
+  // 1 = free
+  const grid = [
+    [0,1,1,1,0],
+    [1,1,1,1,0],
+    [0,1,1,1,1],
+    [0,1,1,1,0],
+    [1,0,1,1,0],
+  ];
+  function renderCal(){
+    const cols = 5;
+    // count free per column to flag "everyone free"
+    const colFree = Array(cols).fill(0);
+    grid.forEach(r=>r.forEach((v,i)=>colFree[i]+=v));
+    document.getElementById('cal').innerHTML = people.map((p,ri)=>`
+      <tr>
+        <td class="name">${p.n}</td>
+        ${grid[ri].map((v,ci)=>`
+          <td><div class="slot ${v?'free':''} ${v&&colFree[ci]>=people.length-1?'hot':''}" data-r="${ri}" data-c="${ci}"></div></td>
+        `).join('')}
+      </tr>`).join('');
+    document.querySelectorAll('.slot').forEach(s=>{
+      s.onclick=()=>{const r=+s.dataset.r,c=+s.dataset.c;grid[r][c]=grid[r][c]?0:1;renderCal();};
+    });
+  }
+  renderCal();
+
+  /* ---------- expenses ---------- */
+  const balances = [
+    {n:'Aria', c:'#00e5d0', note:'paid for the Airbnb', amt:126.00, dir:'get'},
+    {n:'Jai',  c:'#ff8a3d', note:'covered petrol x2', amt:42.50, dir:'get'},
+    {n:'You',  c:'#ff5fa2', note:'owe the group', amt:84.50, dir:'owe'},
+    {n:'Mia',  c:'#a55cff', note:'square with everyone', amt:0, dir:'even'},
+  ];
+  document.getElementById('balances').innerHTML = balances.map(b=>`
+    <div class="bal">
+      <div class="av" style="background:linear-gradient(135deg,${b.c},#3a0f26)">${b.n[0]}</div>
+      <div class="who">${b.n==='You'?'You':b.n}<small>${b.note}</small></div>
+      <div class="amt ${b.dir==='owe'?'owe':b.dir==='get'?'get':''}" style="${b.dir==='even'?'color:var(--mute)':''}">
+        ${b.dir==='even'?'settled':(b.dir==='owe'?'− $':'+ $')+b.amt.toFixed(2)}
+      </div>
+    </div>`).join('');
+
+  const recent = [
+    {t:'Airbnb — 2 nights', by:'Aria', total:378, split:'÷ 7'},
+    {t:'Petrol + tolls', by:'Jai', total:98, split:'÷ 7'},
+    {t:'Groceries run', by:'Rudy', total:64, split:'÷ 5'},
+  ];
+  document.getElementById('recent').innerHTML =
+    `<div style="font-size:11px;color:var(--mute);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Recent expenses</div>` +
+    recent.map(r=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,30,121,.08)">
+        <div><div style="font-size:13px;font-weight:600">${r.t}</div>
+        <small style="color:var(--mute);font-size:11px">${r.by} paid · split ${r.split}</small></div>
+        <b style="font-family:'Archivo';font-weight:800;font-size:14px">$${r.total}</b>
+      </div>`).join('');
+
+  /* nav visual toggle */
+  document.querySelectorAll('.nav button').forEach(b=>{
+    b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');};
+  });
+</script>
+</body>
+</html>

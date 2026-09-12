@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINKUP — now</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,600;0,800;0,900;1,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#08010a;--panel:#160a14;--panel-2:#1f0c1a;--line:rgba(255,30,121,.18);
+    --pink:#ff1e79;--pink-soft:#ff5fa2;--pink-pale:#f7c1d9;--orange:#ff8a3d;
+    --teal:#00e5d0;--ink:#efd9e6;--mute:#9a7488;--glow:0 0 24px rgba(255,30,121,.45);
+    --land:#0d0710;--water:#05070f;--road:#2a1220;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:
+      radial-gradient(1000px 600px at 85% -10%,rgba(255,138,61,.08),transparent 60%),
+      radial-gradient(900px 700px at -5% 110%,rgba(0,229,208,.07),transparent 55%),var(--void);
+    color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--pink);color:#fff}
+  .app{display:grid;grid-template-columns:76px 1fr;min-height:100vh}
+
+  /* rail */
+  .rail{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,#12040f,#0a020a);
+    border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0;gap:8px;z-index:20}
+  .badge{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-family:'Archivo';
+    font-weight:900;font-style:italic;font-size:20px;color:#fff;background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:var(--glow);margin-bottom:10px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav button{width:46px;height:46px;border:0;border-radius:13px;background:transparent;color:var(--mute);
+    cursor:pointer;display:grid;place-items:center;transition:.18s;position:relative}
+  .nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .nav button:hover{color:var(--pink-pale);background:rgba(255,30,121,.08)}
+  .nav button.on{color:#fff;background:rgba(255,30,121,.16)}
+  .nav button.on::before{content:"";position:absolute;left:-18px;top:11px;bottom:11px;width:3px;border-radius:3px;background:var(--pink);box-shadow:var(--glow)}
+  .nav .tip{position:absolute;left:56px;white-space:nowrap;background:#000;border:1px solid var(--line);
+    padding:5px 9px;border-radius:8px;font-size:12px;color:var(--ink);opacity:0;pointer-events:none;transition:.15s;z-index:30}
+  .nav button:hover .tip{opacity:1}
+  .me{margin-top:auto;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff5fa2,#7b1030);
+    border:2px solid var(--pink);display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px}
+
+  .main{padding:22px 26px 60px;max-width:1320px}
+  .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .word{font-family:'Archivo';font-style:italic;font-weight:900;font-size:26px;letter-spacing:-1px;color:#fff}
+  .word b{color:var(--pink);text-shadow:var(--glow)}
+  /* segmented NOW / TRIPS */
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+  .seg button{border:0;background:transparent;color:var(--mute);font-weight:800;font-size:13px;font-family:'Archivo';
+    padding:8px 18px;border-radius:999px;cursor:pointer;letter-spacing:.5px;transition:.18s}
+  .seg button.on{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;box-shadow:var(--glow)}
+  .spacer{flex:1}
+  .stack{display:flex}
+  .stack .av{width:34px;height:34px;border-radius:50%;border:2px solid var(--void);margin-left:-9px;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff}
+  .stack .av:first-child{margin-left:0}
+  .btn{border:0;cursor:pointer;font-weight:700;font-size:13px;border-radius:11px;padding:10px 15px;display:inline-flex;align-items:center;gap:7px;transition:.18s}
+  .btn.ghost-btn{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost-btn:hover{border-color:var(--pink);color:#fff}
+  .btn.ghost-btn.active{background:linear-gradient(135deg,#3a1466,#1a0a2e);border-color:#a55cff;color:#d9c2ff;box-shadow:0 0 20px rgba(165,92,255,.35)}
+  .btn.primary{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;box-shadow:var(--glow)}
+  .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+
+  /* ---- MAP ---- */
+  .maprow{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:18px}
+  .map{position:relative;border-radius:22px;overflow:hidden;height:440px;border:1px solid var(--line);
+    background:var(--water);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .map svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .map .scan{position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(255,30,121,.04) 0 2px,transparent 2px 4px);mix-blend-mode:screen}
+  .map .vig{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 120px 30px rgba(8,1,10,.8)}
+
+  /* HUD overlays */
+  .hud{position:absolute;z-index:5}
+  .hud.tl{top:16px;left:16px;display:flex;gap:10px;align-items:center}
+  .live{display:flex;align-items:center;gap:8px;background:rgba(8,1,10,.7);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700}
+  .live .pulse{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal);animation:blink 1.6s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .hud.tr{top:16px;right:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .share-pill{background:rgba(8,1,10,.7);backdrop-filter:blur(6px);border:1px solid rgba(0,229,208,.3);
+    border-radius:12px;padding:9px 13px;font-size:11px;color:var(--teal);font-weight:600;max-width:210px;text-align:right}
+  .zoom{position:absolute;bottom:16px;right:16px;z-index:5;display:flex;flex-direction:column;gap:6px}
+  .zoom button{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:rgba(8,1,10,.75);
+    color:var(--pink-pale);font-size:18px;cursor:pointer;backdrop-filter:blur(6px)}
+  .zoom button:hover{border-color:var(--pink);color:#fff}
+  .compass{position:absolute;bottom:16px;left:16px;z-index:5;background:rgba(8,1,10,.7);border:1px solid var(--line);
+    border-radius:12px;padding:8px 12px;font-family:'Archivo';font-weight:900;font-size:13px;color:var(--pink);letter-spacing:1px;backdrop-filter:blur(6px)}
+
+  /* blips */
+  .blip{position:absolute;z-index:4;transform:translate(-50%,-50%);cursor:pointer}
+  .blip .ring{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;transform:translate(-50%,-50%);
+    border:2px solid currentColor;opacity:.5;animation:sonar 2.4s infinite ease-out}
+  @keyframes sonar{0%{width:16px;height:16px;opacity:.7}100%{width:56px;height:56px;opacity:0}}
+  .blip .pin{position:relative;width:32px;height:32px;border-radius:50%;border:2px solid #fff;background-size:cover;background-position:center;
+    box-shadow:0 0 14px currentColor,0 3px 8px rgba(0,0,0,.6);display:grid;place-items:center;font-weight:800;color:#fff;font-size:13px}
+  .blip .label{position:absolute;top:36px;left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(8,1,10,.85);
+    border:1px solid var(--line);padding:2px 8px;border-radius:7px;font-size:10px;font-weight:700;color:#fff}
+  /* you = GTA player chevron */
+  .you{position:absolute;z-index:6;transform:translate(-50%,-50%)}
+  .you .arrow{width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:20px solid var(--pink);
+    filter:drop-shadow(0 0 10px var(--pink))}
+  .you.ghost .arrow{border-bottom-color:#a55cff;opacity:.55;filter:drop-shadow(0 0 8px #a55cff)}
+  .you .cone{position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:60px;height:60px;
+    background:radial-gradient(circle at 50% 0,rgba(255,30,121,.35),transparent 65%);pointer-events:none}
+  .you.ghost .cone{background:radial-gradient(circle at 50% 0,rgba(165,92,255,.25),transparent 65%)}
+
+  /* blip popup */
+  .pop{position:absolute;z-index:8;background:linear-gradient(180deg,var(--panel),#0d0610);border:1px solid var(--pink);
+    border-radius:14px;padding:12px 14px;width:200px;box-shadow:0 12px 40px rgba(0,0,0,.6);transform:translate(-50%,-118%);display:none}
+  .pop.show{display:block}
+  .pop b{font-size:14px}
+  .pop .st{font-size:11px;color:var(--teal);font-weight:700;margin-top:2px}
+  .pop small{display:block;color:var(--mute);font-size:11px;margin-top:6px}
+  .pop .row{display:flex;gap:8px;margin-top:10px}
+  .pop .mini{flex:1;text-align:center;font-size:11px;font-weight:700;padding:7px;border-radius:9px;border:1px solid var(--line);background:#000;color:var(--pink-pale);cursor:pointer}
+  .pop .mini:hover{border-color:var(--pink);color:#fff}
+
+  /* ghost banner */
+  .ghostbar{display:none;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(58,20,102,.5),rgba(26,10,46,.3));
+    border:1px solid #a55cff;border-radius:14px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#d9c2ff;font-weight:600}
+  .ghostbar.show{display:flex}
+  .ghostbar .g{font-size:18px}
+
+  /* bottom columns */
+  .cols{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start}
+  .card{background:linear-gradient(180deg,var(--panel),#100610);border:1px solid var(--line);border-radius:20px;padding:20px}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .card h2{font-family:'Archivo';font-weight:800;font-size:16px;display:flex;align-items:center;gap:9px}
+  .card h2 .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:rgba(255,30,121,.14);color:var(--pink)}
+  .card h2 .ic svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+  .link{color:var(--pink-soft);font-size:12px;font-weight:700;cursor:pointer}
+  .link:hover{color:var(--pink)}
+
+  /* tonight plan card */
+  .plan{background:var(--panel-2);border:1px solid transparent;border-radius:14px;padding:14px;margin-bottom:12px;transition:.18s}
+  .plan:hover{border-color:var(--line)}
+  .plan .ph{display:flex;gap:12px;align-items:center}
+  .plan .emoji{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--pink),var(--orange));
+    display:grid;place-items:center;font-size:22px;flex:none;box-shadow:0 6px 16px rgba(255,30,121,.3)}
+  .plan .pt{flex:1;min-width:0}
+  .plan .pt strong{font-size:14px;display:block}
+  .plan .pt small{color:var(--mute);font-size:12px}
+  .plan .when{text-align:right;font-family:'Archivo';font-weight:900;font-size:15px;color:var(--pink-pale)}
+  .plan .when small{display:block;font-family:'Inter';font-weight:600;font-size:10px;color:var(--mute)}
+  .rsvp{display:flex;gap:8px;margin-top:12px;align-items:center}
+  .rsvp .going{display:flex;margin-right:auto}
+  .rsvp .going .av{width:26px;height:26px;border-radius:50%;border:2px solid var(--panel-2);margin-left:-8px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+  .rsvp .going .av:first-child{margin-left:0}
+  .rb{border:1px solid var(--line);background:#000;color:var(--pink-pale);font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .rb:hover{border-color:var(--pink)}
+  .rb.in{background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;border-color:transparent}
+  .rb.maybe.sel{background:rgba(255,138,61,.2);border-color:var(--orange);color:var(--orange)}
+  .rb.out.sel{background:rgba(154,116,136,.15);color:var(--mute)}
+
+  /* activity feed */
+  .feed .item{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid rgba(255,30,121,.08)}
+  .feed .item:last-child{border:0}
+  .feed .dot{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+  .feed .tx{font-size:12.5px;line-height:1.45}
+  .feed .tx b{font-weight:700;color:#fff}
+  .feed .tx small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+
+  @media(max-width:960px){.cols{grid-template-columns:1fr}}
+  @media(max-width:640px){
+    .app{grid-template-columns:1fr}
+    .rail{position:fixed;bottom:0;top:auto;left:0;right:0;height:64px;width:100%;flex-direction:row;justify-content:space-around;padding:0 8px;border-right:0;border-top:1px solid var(--line)}
+    .rail .badge,.rail .me{display:none}.nav{flex-direction:row}.nav button.on::before{display:none}.nav .tip{display:none}
+    .main{padding:18px 14px 90px}.map{height:360px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="badge">L</div>
+    <nav class="nav">
+      <button class="on"><span class="tip">Now</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></button>
+      <button><span class="tip">Map</span><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>
+      <button><span class="tip">Trips</span><svg viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+      <button><span class="tip">Plans</span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></button>
+      <button><span class="tip">Money</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5a2.5 2 0 0 1 5 .3M14.5 14.5a2.5 2 0 0 1-5-.3"/></svg></button>
+    </nav>
+    <div class="me">RS</div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="word">LINK<b>UP</b></div>
+      <div class="seg">
+        <button class="on">NOW</button>
+        <button onclick="alert('This is the NOW dashboard mock. TRIPS is the other file.')">TRIPS</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="stack">
+        <div class="av" style="background:linear-gradient(135deg,#00e5d0,#065f57)">A</div>
+        <div class="av" style="background:linear-gradient(135deg,#ff8a3d,#7a3a10)">J</div>
+        <div class="av" style="background:linear-gradient(135deg,#a55cff,#3a1466)">M</div>
+        <div class="av" style="background:#2a0f22;color:var(--pink-soft);font-size:11px">+4</div>
+      </div>
+      <button class="btn ghost-btn" id="ghostToggle">👻 Ghost mode</button>
+      <button class="btn primary">＋ Drop a plan</button>
+    </div>
+
+    <div class="ghostbar" id="ghostbar">
+      <span class="g">👻</span>
+      <div>You're invisible. Only you can see where you are — nobody in the crew can track you until you turn this off.</div>
+    </div>
+
+    <!-- MAP -->
+    <div class="maprow">
+      <div class="map" id="map">
+        <!-- stylized GTA-ish map -->
+        <svg viewBox="0 0 1200 440" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="landg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#120913"/><stop offset="1" stop-color="#0a050c"/>
+            </linearGradient>
+            <filter id="roadglow"><feGaussianBlur stdDeviation="1.4"/></filter>
+          </defs>
+          <!-- water base -->
+          <rect width="1200" height="440" fill="#05070f"/>
+          <!-- landmasses -->
+          <path d="M0,0 H1200 V300 Q1050,340 900,300 T620,320 Q480,360 360,320 T80,340 Q30,320 0,300 Z" fill="url(#landg)"/>
+          <path d="M760,440 Q820,360 940,380 T1200,360 V440 Z" fill="url(#landg)"/>
+          <!-- park block -->
+          <rect x="150" y="90" width="180" height="120" rx="14" fill="#0a1a10" opacity=".8"/>
+          <rect x="150" y="90" width="180" height="120" rx="14" fill="none" stroke="rgba(0,229,208,.25)"/>
+          <!-- city blocks (subtle) -->
+          <g fill="rgba(255,95,162,.05)" stroke="rgba(255,30,121,.08)">
+            <rect x="420" y="70" width="90" height="70" rx="6"/><rect x="530" y="70" width="120" height="70" rx="6"/>
+            <rect x="420" y="160" width="120" height="60" rx="6"/><rect x="560" y="160" width="90" height="60" rx="6"/>
+            <rect x="720" y="90" width="110" height="90" rx="6"/><rect x="850" y="90" width="90" height="90" rx="6"/>
+            <rect x="720" y="200" width="90" height="60" rx="6"/><rect x="830" y="200" width="110" height="60" rx="6"/>
+          </g>
+          <!-- roads: neon grid + highways -->
+          <g stroke="var(--pink)" stroke-width="2.4" opacity=".55" filter="url(#roadglow)" fill="none">
+            <path d="M0,150 H1200"/><path d="M0,250 H1200"/>
+            <path d="M400,0 V300"/><path d="M680,0 V320"/><path d="M960,0 V300"/>
+          </g>
+          <g stroke="var(--teal)" stroke-width="1.4" opacity=".4" fill="none">
+            <path d="M0,110 H360"/><path d="M540,40 V300"/><path d="M0,300 Q400,210 800,290 T1200,250"/>
+          </g>
+          <!-- highway (bright diagonal) -->
+          <path d="M-20,360 Q300,260 620,300 T1220,180" stroke="var(--orange)" stroke-width="3.4" fill="none" opacity=".7" filter="url(#roadglow)"/>
+        </svg>
+        <div class="scan"></div>
+        <div class="vig"></div>
+
+        <!-- HUD -->
+        <div class="hud tl">
+          <div class="live"><span class="pulse"></span> 3 friends nearby</div>
+        </div>
+        <div class="hud tr">
+          <div class="share-pill" id="sharePill">📡 Sharing until 11:00pm · tied to tonight's plan</div>
+        </div>
+        <div class="zoom"><button>＋</button><button>－</button></div>
+        <div class="compass">◈ VICE CITY</div>
+
+        <!-- friend blips (positioned %) -->
+        <div class="blip" style="left:22%;top:35%;color:#00e5d0" data-name="Aria" data-st="At Miss Kay's diner" data-seen="now">
+          <span class="ring"></span><span class="pin" style="background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100')"></span>
+          <span class="label">Aria</span>
+        </div>
+        <div class="blip" style="left:57%;top:52%;color:#ff8a3d" data-name="Jai" data-st="Heading to the beach" data-seen="2m ago">
+          <span class="ring"></span><span class="pin" style="background-image:url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100')"></span>
+          <span class="label">Jai</span>
+        </div>
+        <div class="blip" style="left:74%;top:30%;color:#a55cff" data-name="Mia" data-st="Home · chilling" data-seen="8m ago">
+          <span class="ring"></span><span class="pin" style="background-image:url('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100')"></span>
+          <span class="label">Mia</span>
+        </div>
+
+        <!-- you -->
+        <div class="you" id="you" style="left:40%;top:64%">
+          <div class="cone"></div>
+          <div class="arrow"></div>
+        </div>
+
+        <div class="pop" id="pop"></div>
+      </div>
+    </div>
+
+    <!-- bottom -->
+    <div class="cols">
+      <!-- TONIGHT plans -->
+      <section class="card">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></span>Tonight & this week</h2>
+          <span class="link">＋ Drop a plan</span>
+        </div>
+
+        <div class="plan">
+          <div class="ph">
+            <div class="emoji">🍜</div>
+            <div class="pt"><strong>Ramen at Miss Kay's</strong><small>Fortitude Valley · Aria dropped this</small></div>
+            <div class="when">7:30<small>TONIGHT</small></div>
+          </div>
+          <div class="rsvp">
+            <div class="going">
+              <div class="av" style="background:#00e5d0">A</div>
+              <div class="av" style="background:#ff8a3d">J</div>
+              <div class="av" style="background:#2a0f22;color:var(--pink-soft);font-size:9px">+1</div>
+            </div>
+            <button class="rb in" onclick="pick(this,'in')">I'm in</button>
+            <button class="rb maybe" onclick="pick(this,'maybe')">Maybe</button>
+            <button class="rb out" onclick="pick(this,'out')">Can't</button>
+          </div>
+        </div>
+
+        <div class="plan">
+          <div class="ph">
+            <div class="emoji">🎬</div>
+            <div class="pt"><strong>Movie night</strong><small>Southbank cinema · Mia dropped this</small></div>
+            <div class="when">Sat<small>THIS WK</small></div>
+          </div>
+          <div class="rsvp">
+            <div class="going">
+              <div class="av" style="background:#a55cff">M</div>
+              <div class="av" style="background:#ff5fa2">R</div>
+            </div>
+            <button class="rb" onclick="pick(this,'in')">I'm in</button>
+            <button class="rb maybe sel" onclick="pick(this,'maybe')">Maybe</button>
+            <button class="rb out" onclick="pick(this,'out')">Can't</button>
+          </div>
+        </div>
+
+        <div class="plan" style="opacity:.6">
+          <div class="ph">
+            <div class="emoji">☕</div>
+            <div class="pt"><strong>Coffee run</strong><small>Expired · nobody made it 😴</small></div>
+            <div class="when" style="color:var(--mute)">gone<small>10am</small></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIVE activity -->
+      <section class="card">
+        <div class="head">
+          <h2><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>Live now</h2>
+          <span class="link">Mute</span>
+        </div>
+        <div class="feed">
+          <div class="item"><div class="dot" style="background:#00e5d0">A</div>
+            <div class="tx"><b>Aria</b> is at Miss Kay's — the plan's already happening<small>just now</small></div></div>
+          <div class="item"><div class="dot" style="background:#ff8a3d">J</div>
+            <div class="tx"><b>Jai</b> is 4 min away, heading to the diner<small>2 min ago</small></div></div>
+          <div class="item"><div class="dot" style="background:#a55cff">M</div>
+            <div class="tx"><b>Mia</b> went 👻 ghost — location hidden<small>8 min ago</small></div></div>
+          <div class="item"><div class="dot" style="background:#ff5fa2">R</div>
+            <div class="tx"><b>You</b> dropped a coffee run — it expired with no takers<small>2 hrs ago</small></div></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  /* ghost mode */
+  const gt = document.getElementById('ghostToggle');
+  const gb = document.getElementById('ghostbar');
+  const you = document.getElementById('you');
+  const pill = document.getElementById('sharePill');
+  let ghost=false;
+  gt.onclick=()=>{
+    ghost=!ghost;
+    gt.classList.toggle('active',ghost);
+    gb.classList.toggle('show',ghost);
+    you.classList.toggle('ghost',ghost);
+    gt.textContent = ghost ? '👻 Ghost on' : '👻 Ghost mode';
+    pill.textContent = ghost ? '👻 You are hidden from the crew'
+                             : '📡 Sharing until 11:00pm · tied to tonight\'s plan';
+    pill.style.color = ghost ? '#d9c2ff' : 'var(--teal)';
+    pill.style.borderColor = ghost ? 'rgba(165,92,255,.4)' : 'rgba(0,229,208,.3)';
+  };
+
+  /* blip popups */
+  const pop = document.getElementById('pop');
+  document.querySelectorAll('.blip').forEach(b=>{
+    b.onclick=(e)=>{
+      e.stopPropagation();
+      const map=document.getElementById('map').getBoundingClientRect();
+      const r=b.getBoundingClientRect();
+      pop.style.left=(r.left-map.left+r.width/2)+'px';
+      pop.style.top=(r.top-map.top)+'px';
+      pop.innerHTML=`<b>${b.dataset.name}</b><div class="st">🟢 ${b.dataset.st}</div>
+        <small>Last updated ${b.dataset.seen}</small>
+        <div class="row"><div class="mini">Ping</div><div class="mini">Directions</div></div>`;
+      pop.classList.add('show');
+    };
+  });
+  document.getElementById('map').onclick=()=>pop.classList.remove('show');
+
+  /* RSVP toggles */
+  function pick(btn,type){
+    const row=btn.parentElement;
+    row.querySelectorAll('.rb').forEach(b=>{b.classList.remove('in');b.classList.remove('sel');});
+    if(type==='in')btn.classList.add('in');else btn.classList.add('sel');
+  }
+
+  /* drift blips a little for "live" feel */
+  setInterval(()=>{
+    document.querySelectorAll('.blip').forEach(b=>{
+      const l=parseFloat(b.style.left),t=parseFloat(b.style.top);
+      b.style.left=(l+(Math.random()-.5)*0.6)+'%';
+      b.style.top=(t+(Math.random()-.5)*0.6)+'%';
+    });
+  },2500);
+</script>
+</body>
+</html>
