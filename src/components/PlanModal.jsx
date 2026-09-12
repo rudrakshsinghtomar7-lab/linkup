@@ -12,10 +12,11 @@ const pad = (n) => String(n).padStart(2, '0')
 const toLocalInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 
 // "Drop a plan": crew-scoped, created by me, always with an expiry (plans are ephemeral).
-export default function PlanModal({ onClose, onCreated }) {
+export default function PlanModal({ onClose, onCreated, day }) {
   const { activeCrew, user } = useSession()
   const toast = useToast()
-  const start = new Date(Date.now() + 60 * 60 * 1000); start.setMinutes(0, 0, 0)
+  const start = day ? new Date(day + 'T19:00:00') : new Date(Date.now() + 60 * 60 * 1000)
+  if (!day) start.setMinutes(0, 0, 0)
   const [f, setF] = useState({ title: '', emoji: '📍', place_name: '', location: '', starts_at: toLocalInput(start), hours: '4' })
   const [busy, setBusy] = useState(false)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })

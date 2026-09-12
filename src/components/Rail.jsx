@@ -15,7 +15,7 @@ export default function Rail({ items, active }) {
       <nav className="nav">
         {items.map((it) => (
           <button key={it.key} className={active === it.key ? 'on' : ''} onClick={it.onClick} aria-label={it.tip}>
-            <span className="tip">{it.tip}</span>{it.icon()}
+            <span className="tip">{it.tip}</span>{it.icon()}<span className="lab">{it.tip}</span>
           </button>
         ))}
       </nav>

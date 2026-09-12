@@ -25,14 +25,15 @@ export function useLocations(crewId, userId) {
   // A payload-free broadcast on the crew channel tells clients to refetch (RLS still decides
   // what they get back), and a 30s poll covers anything missed.
   const chan = useRef(null)
+  const loadRef = useRef(load); loadRef.current = load
   useEffect(() => {
     if (!crewId) return
     const ch = supabase.channel(`crew-${crewId}-locations`, { config: { broadcast: { self: false } } })
-      .on('broadcast', { event: 'changed' }, () => load()).subscribe()
+      .on('broadcast', { event: 'changed' }, () => loadRef.current()).subscribe()
     chan.current = ch
-    const poll = setInterval(load, 30_000)
+    const poll = setInterval(() => loadRef.current(), 30_000)
     return () => { clearInterval(poll); supabase.removeChannel(ch); chan.current = null }
-  }, [crewId, load])
+  }, [crewId])
   const ping = useCallback(() => { chan.current?.send({ type: 'broadcast', event: 'changed', payload: {} }) }, [])
 
   const mine = rows?.find((r) => r.user_id === userId) ?? null

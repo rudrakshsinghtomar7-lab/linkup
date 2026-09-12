@@ -11,7 +11,7 @@ function res(p) {
   return ''
 }
 
-export default function PhotoWall({ trip, data }) {
+export default function PhotoWall({ trip, data, title = 'Trip photos' }) {
   const { photos, loading, error, reload, upload, uploading } = data
   const toast = useToast()
   const input = useRef()
@@ -28,10 +28,10 @@ export default function PhotoWall({ trip, data }) {
   return (
     <section className="card" id="photos">
       <div className="head">
-        <h2><span className="ic"><Icon.photo /></span>Trip photos</h2>
+        <h2><span className="ic"><Icon.photo /></span>{title}</h2>
         {photos?.length > 5 && <button className="link" onClick={() => setAll(!all)}>{all ? 'Show less' : 'Full-res album'}</button>}
       </div>
-      {!trip ? <div className="state">Photos live on a trip. Start one first.</div>
+      {!trip ? <div className="state">Photos live on a trip or a plan. Start one first.</div>
         : loading ? <div className="state">Loading photos…</div>
         : error ? <div className="state err">Couldn’t load photos.<button className="link" onClick={reload}>Retry</button></div>
         : (

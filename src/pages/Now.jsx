@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Rail from '../components/Rail'
 import { Icon } from '../components/Icons'
+import { navItems } from '../components/nav'
 import { Stack } from '../components/Avatar'
 import CrewMenu from '../components/CrewMenu'
 import PlanModal from '../components/PlanModal'
@@ -18,7 +19,6 @@ import { ScopeModal, PrimerModal, GeoBar } from './now/Sharing'
 import { friendly, fmtTime } from '../lib/format'
 import '../styles/now.css'
 
-const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
 export default function Now() {
   const { activeCrew, members, user, reloadMembers } = useSession()
@@ -37,7 +37,6 @@ export default function Now() {
   const [crewMenu, setCrewMenu] = useState(false)
   const [share, setShare] = useState(false)
   const [primer, setPrimer] = useState(false)
-  const [active, setActive] = useState('now')
 
   // Clock tick (30s) so plan windows and blip staleness re-evaluate without new data.
   const [now, setNow] = useState(Date.now())
@@ -73,17 +72,9 @@ export default function Now() {
     : scope === 'hours' ? (loc.mine?.share_until && new Date(loc.mine.share_until) > new Date() ? `📡 Sharing until ${fmtTime(loc.mine.share_until)}` : '⏹ 3 hours are up')
     : '📡 Sharing always · not broadcasting'
 
-  const rail = [
-    { key: 'now', tip: 'Now', icon: Icon.clock, onClick: () => { setActive('now'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },
-    { key: 'map', tip: 'Map', icon: Icon.map, onClick: () => { setActive('map'); scrollTo('map') } },
-    { key: 'trips', tip: 'Trips', icon: Icon.pin, onClick: () => nav('/trips') },
-    { key: 'plans', tip: 'Plans', icon: Icon.calendar, onClick: () => { setActive('plans'); scrollTo('plans') } },
-    { key: 'money', tip: 'Money', icon: Icon.money, onClick: () => nav('/trips#money') },
-  ]
-
   return (
     <div className="app now">
-      <Rail items={rail} active={active} />
+      <Rail items={navItems(nav)} active="now" />
       <main className="main">
         <div className="top">
           <a className="word" onClick={() => nav('/now')}>LINK<b>UP</b></a>

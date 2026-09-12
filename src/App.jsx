@@ -58,6 +58,8 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/now" replace />} />
       <Route path="/now" element={<Suspense fallback={<Splash />}><Now /></Suspense>} />
       <Route path="/trips" element={<Trips />} />
+      <Route path="/trips/day" element={<Trips />} />
+      <Route path="/trips/photos" element={<Trips />} />
       <Route path="*" element={<Navigate to="/now" replace />} />
     </Routes>
   )
