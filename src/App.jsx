@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { SessionProvider, useSession } from './providers/SessionProvider'
 import { ToastProvider } from './providers/ToastProvider'
@@ -5,6 +6,7 @@ import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import CrewGate from './pages/CrewGate'
 import Trips from './pages/Trips'
+const Now = lazy(() => import('./pages/Now')) // keeps Mapbox out of the initial bundle
 import './styles/auth.css'
 
 function Splash() {
@@ -28,9 +30,10 @@ export default function App() {
       <ToastProvider>
         <Gate>
           <Routes>
-            <Route path="/" element={<Navigate to="/trips" replace />} />
+            <Route path="/" element={<Navigate to="/now" replace />} />
+            <Route path="/now" element={<Suspense fallback={<Splash />}><Now /></Suspense>} />
             <Route path="/trips" element={<Trips />} />
-            <Route path="*" element={<Navigate to="/trips" replace />} />
+            <Route path="*" element={<Navigate to="/now" replace />} />
           </Routes>
         </Gate>
       </ToastProvider>

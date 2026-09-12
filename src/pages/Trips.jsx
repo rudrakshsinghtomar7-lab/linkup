@@ -23,7 +23,7 @@ import '../styles/trips.css'
 const scrollTo = (id) => () => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
 export default function Trips() {
-  const { activeCrew, members, user } = useSession()
+  const { activeCrew, members, user, reloadMembers } = useSession()
   const toast = useToast()
   const nav = useNavigate()
   const trips = useTrips(activeCrew.id)
@@ -32,6 +32,11 @@ export default function Trips() {
   const photos = usePhotos(trip?.id, user.id)
   const avail = useAvailability(trip, user.id)
   const expenses = useExpenses(activeCrew.id, user.id)
+  useEffect(() => {
+    const known = new Set(members.map((m) => m.id))
+    const seen = [...(avail.rows || []).map((r) => r.user_id), ...(expenses.balances || []).map((b) => b.user_id)]
+    if (seen.some((id) => !known.has(id))) reloadMembers()
+  }, [avail.rows, expenses.balances]) // eslint-disable-line react-hooks/exhaustive-deps
   const [switching, setSwitching] = useState(false)
   const [newTrip, setNewTrip] = useState(false)
   const [newPlan, setNewPlan] = useState(false)
