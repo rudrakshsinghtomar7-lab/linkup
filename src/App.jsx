@@ -9,6 +9,7 @@ import UpdatePassword from './pages/auth/UpdatePassword'
 import Onboarding from './pages/Onboarding'
 import CrewGate from './pages/CrewGate'
 import Trips from './pages/Trips'
+import Shell from './components/Shell'
 const Now = lazy(() => import('./pages/Now')) // keeps Mapbox out of the initial bundle
 import './styles/auth.css'
 
@@ -55,11 +56,13 @@ function Public({ children }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route element={<Shell />}>
+        <Route path="/now" element={<Suspense fallback={<main className="main" />}><Now /></Suspense>} />
+        <Route path="/trips" element={<Trips />} />
+        <Route path="/trips/day" element={<Trips />} />
+        <Route path="/trips/photos" element={<Trips />} />
+      </Route>
       <Route path="/" element={<Navigate to="/now" replace />} />
-      <Route path="/now" element={<Suspense fallback={<Splash />}><Now /></Suspense>} />
-      <Route path="/trips" element={<Trips />} />
-      <Route path="/trips/day" element={<Trips />} />
-      <Route path="/trips/photos" element={<Trips />} />
       <Route path="*" element={<Navigate to="/now" replace />} />
     </Routes>
   )

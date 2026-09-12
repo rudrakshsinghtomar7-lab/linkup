@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Rail from '../components/Rail'
 import { Icon } from '../components/Icons'
-import { navItems } from '../components/nav'
 import { Stack } from '../components/Avatar'
 import CrewMenu from '../components/CrewMenu'
 import PlanModal from '../components/PlanModal'
@@ -74,8 +72,7 @@ export default function Now() {
     : '📡 Sharing always · not broadcasting'
 
   return (
-    <div className="app now">
-      <Rail items={navItems(nav)} active="now" />
+    <>
       <main className="main">
         <div className="top">
           <a className="word" onClick={() => nav('/now')}>LINK<b>UP</b></a>
@@ -111,6 +108,6 @@ export default function Now() {
       {crewMenu && <CrewMenu onClose={() => setCrewMenu(false)} />}
       {share && <ScopeModal mine={loc.mine} planActive={planActive} saving={loc.saving} crewName={activeCrew.name} onPick={setScope} onClose={() => setShare(false)} />}
       {primer && <PrimerModal crewName={activeCrew.name} onClose={() => setPrimer(false)} onEnable={() => { setPrimer(false); live.enable() }} />}
-    </div>
+    </>
   )
 }

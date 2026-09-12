@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import Rail from '../components/Rail'
-import { navItems } from '../components/nav'
 import { Stack } from '../components/Avatar'
 import CrewMenu from '../components/CrewMenu'
 import PlanModal from '../components/PlanModal'
@@ -72,8 +70,7 @@ export default function Trips() {
   useEffect(() => { if (trips.error) toast('Couldn’t load trips. Try again.') }, [trips.error]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="app trips">
-      <Rail items={navItems(nav)} active={seg} />
+    <>
       <main className="main">
         <div className="top">
           <a className="word" onClick={() => nav('/now')}>LINK<b>UP</b></a>
@@ -96,6 +93,6 @@ export default function Trips() {
       {newTrip && <TripModal onClose={() => setNewTrip(false)} onCreate={(f) => trips.create(f, user.id)} />}
       {newPlan && <PlanModal day={newPlan.day} onClose={() => setNewPlan(null)} onCreated={() => { if (seg !== 'day') nav('/trips/day') }} />}
       {crewMenu && <CrewMenu onClose={() => setCrewMenu(false)} />}
-    </div>
+    </>
   )
 }
