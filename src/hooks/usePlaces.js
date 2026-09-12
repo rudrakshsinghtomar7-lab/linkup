@@ -15,7 +15,7 @@ export function usePlaces(tripId, userId) {
     const { data: p, error: pe } = await supabase.from('trip_places').select('*').eq('trip_id', tripId).order('created_at', { ascending: true })
     if (pe) { setError(pe); setPlaces([]); return }
     const ids = (p || []).map((x) => x.id)
-    const { data: v, error: ve } = ids.length ? await supabase.from('place_votes').select('place_id, user_id').in('place_id', ids) : { data: [] }
+    const { data: v, error: ve } = ids.length ? await supabase.from('place_votes').select('place_id, user_id, profiles(display_name, color)').in('place_id', ids) : { data: [] }
     if (ve) { setError(ve); return }
     setPlaces(p || []); setVotes(v || [])
   }, [tripId])
