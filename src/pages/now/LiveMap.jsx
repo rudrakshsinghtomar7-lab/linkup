@@ -83,7 +83,7 @@ function youEl(ghost) {
 }
 function orient(el, heading) { el.style.transform = heading != null ? `rotate(${heading}deg)` : '' }
 
-export default function LiveMap({ crew, mine, others, members, loading, error, onReload, ghost, sharePill, onShareClick, live, now = Date.now() }) {
+export default function LiveMap({ crew, mine, others, members, loading, error, onReload, ghost, sharePill, onShareClick, live, now = Date.now(), full = false, onToggleFull }) {
   const box = useRef(); const mapRef = useRef(); const markers = useRef({}); const youRef = useRef()
   const [ready, setReady] = useState(false)
   const [sel, setSel] = useState(null) // { user_id, x, y }
@@ -142,11 +142,17 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
     else { const b = pts.reduce((bb, p) => bb.extend(p), new mapboxgl.LngLatBounds(pts[0], pts[0])); map.fitBounds(b, { padding: 80, maxZoom: 14, duration: 0 }) }
   }, [visible, mine, live?.position, ready])
 
+  // Snap-Map style: full-screen toggle needs a resize; recenter on me; fly to a friend.
+  useEffect(() => { const map = mapRef.current; if (!map) return; const t = setTimeout(() => map.resize(), 60); return () => clearTimeout(t) }, [full])
+  const me = live?.position || (mine?.lat != null && mine?.lng != null ? mine : null)
+  const recenter = () => { const map = mapRef.current; if (!map || !me) return; map.flyTo({ center: [me.lng, me.lat], zoom: Math.max(map.getZoom(), 14), speed: 1.4 }) }
+  const flyToFriend = (o) => { const map = mapRef.current; if (!map) return; map.flyTo({ center: [o.lng, o.lat], zoom: Math.max(map.getZoom(), 14), speed: 1.4 }); setSel({ user_id: o.user_id }) }
+
   const selRow = sel && visible.find((o) => o.user_id === sel.user_id)
   const selPos = selRow && mapRef.current ? mapRef.current.project([selRow.lng, selRow.lat]) : null
 
   return (
-    <div className="map" id="map">
+    <div className={`map ${full ? 'full' : ''}`} id="map">
       {TOKEN ? <div className="canvas" ref={box} /> : (
         <div className="nomap"><div><b>Map unavailable</b>Mapbox token isn’t configured for this build.</div></div>
       )}
@@ -162,10 +168,22 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
         <button className={`share-pill ${ghost ? 'ghosted' : ''}`} onClick={onShareClick} title="Change sharing scope">{sharePill}</button>
       </div>
       <div className="zoom">
+        {onToggleFull && <button onClick={onToggleFull} aria-label={full ? 'Exit full screen' : 'Full screen'}>{full ? '✕' : '⤢'}</button>}
+        <button onClick={recenter} disabled={!me} aria-label="Centre on me" title={me ? 'Centre on me' : 'Turn on location first'}>◎</button>
         <button onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in">＋</button>
         <button onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out">－</button>
       </div>
       <div className="compass">◈ {crew?.name}</div>
+      {full && (
+        <div className="friendbar">
+          {me && <button className="fb me" onClick={recenter}><span className="av" style={{ background: 'linear-gradient(135deg,var(--pink),var(--orange))' }}>◆</span><small>You</small></button>}
+          {visible.map((o) => { const pr = byId[o.user_id]; const stale = now - new Date(o.updated_at || 0).getTime() > STALE_MS; return (
+            <button key={o.user_id} className={`fb ${stale ? 'stale' : ''}`} onClick={() => flyToFriend(o)}>
+              <span className="av" style={{ background: pr?.color || '#00e5d0' }}>{initials(pr?.display_name)}</span><small>{(pr?.display_name || '?').split(' ')[0]}</small>
+            </button>) })}
+          {visible.length === 0 && <div className="state" style={{ padding: '6px 4px' }}>No one’s sharing right now.</div>}
+        </div>
+      )}
 
       {selRow && selPos && (
         <div className="pop" style={{ left: selPos.x, top: selPos.y - 16 }} onClick={(e) => e.stopPropagation()}>

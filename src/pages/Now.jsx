@@ -37,6 +37,7 @@ export default function Now() {
   const [crewMenu, setCrewMenu] = useState(false)
   const [share, setShare] = useState(false)
   const [primer, setPrimer] = useState(false)
+  const [fullMap, setFullMap] = useState(false)
 
   // Clock tick (30s) so plan windows and blip staleness re-evaluate without new data.
   const [now, setNow] = useState(Date.now())
@@ -97,7 +98,7 @@ export default function Now() {
 
         <div className="maprow">
           <LiveMap crew={activeCrew} mine={loc.mine} others={loc.others} members={members} loading={loc.loading} error={loc.error} onReload={loc.reload}
-            ghost={ghost} sharePill={sharePill} onShareClick={() => setShare(true)} live={live} now={now} />
+            ghost={ghost} sharePill={sharePill} onShareClick={() => setShare(true)} live={live} now={now} full={fullMap} onToggleFull={() => setFullMap((f) => !f)} />
         </div>
 
         <div className="cols">
