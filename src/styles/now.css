@@ -13,7 +13,9 @@
 .map{position:relative;border-radius:22px;overflow:hidden;height:440px;border:1px solid var(--line);
   background:var(--water);box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .map .canvas{position:absolute;inset:0}
-.map .mapboxgl-canvas{outline:none}
+.map .mapboxgl-canvas{outline:none;filter:saturate(.72) brightness(.82) contrast(1.12)}
+/* plum wash over the imagery so land reads olive/teal like the reference, not photo-green */
+.map .wash{position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,rgba(40,8,60,.35),rgba(10,6,30,.45));mix-blend-mode:multiply}
 .map .mapboxgl-ctrl-bottom-left,.map .mapboxgl-ctrl-bottom-right{z-index:3}
 .map .mapboxgl-ctrl-attrib{background:rgba(8,1,10,.6);color:var(--mute);font-size:9px}
 .map .mapboxgl-ctrl-attrib a{color:var(--mute)}

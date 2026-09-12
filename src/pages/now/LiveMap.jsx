@@ -7,22 +7,48 @@ import { useToast } from '../../providers/ToastProvider'
 const TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 const DEFAULT_CENTER = [153.026, -27.47] // Brisbane — used only when nobody has a location yet
 
-// Re-paint Mapbox's dark style into the mockup's pink/teal/orange treatment.
+// Re-paint Mapbox satellite-streets into the GTA VI "Leonida" official-map look:
+// real satellite terrain, deep navy ocean, olive parks, magenta-tinted urban blocks,
+// thin white roads with gold highways, pink upper-case labels, cyan italic water names.
+const LEONIDA = {
+  water: '#0a1030', urban: '#ff2a8a', park: '#8fbf3f', road: '#ffffff', highway: '#f3b23e',
+  rail: '#d9c2ff', label: '#ff7ad9', labelHalo: '#12051a', water_label: '#4fc3ff',
+}
 function restyle(map) {
   const style = map.getStyle(); if (!style) return
+  const firstRoad = style.layers.find((l) => /^(tunnel|road|bridge)/.test(l.id))?.id
+  // Streets vector source gives us water / landuse polygons to tint over the imagery.
+  if (!map.getSource('leonida')) map.addSource('leonida', { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' })
+  const add = (layer) => { if (!map.getLayer(layer.id)) map.addLayer(layer, firstRoad) }
+  add({ id: 'leonida-water', type: 'fill', source: 'leonida', 'source-layer': 'water', paint: { 'fill-color': LEONIDA.water, 'fill-opacity': 0.86 } })
+  add({ id: 'leonida-shore', type: 'line', source: 'leonida', 'source-layer': 'water', paint: { 'line-color': '#2ec8ff', 'line-opacity': 0.35, 'line-width': 1.2, 'line-blur': 1.5 } })
+  add({ id: 'leonida-park', type: 'fill', source: 'leonida', 'source-layer': 'landuse', filter: ['in', ['get', 'class'], ['literal', ['park', 'wood', 'grass', 'scrub', 'cemetery', 'pitch', 'agriculture']]], paint: { 'fill-color': LEONIDA.park, 'fill-opacity': 0.22 } })
+  add({ id: 'leonida-urban', type: 'fill', source: 'leonida', 'source-layer': 'landuse', filter: ['in', ['get', 'class'], ['literal', ['residential', 'commercial', 'industrial', 'retail']]], paint: { 'fill-color': LEONIDA.urban, 'fill-opacity': 0.28 } })
+  add({ id: 'leonida-buildings', type: 'fill', source: 'leonida', 'source-layer': 'building', minzoom: 13, paint: { 'fill-color': '#ff5fa2', 'fill-opacity': 0.18 } })
+
   for (const l of style.layers) {
     const id = l.id
     try {
-      if (l.type === 'background') map.setPaintProperty(id, 'background-color', '#0d0710')
-      else if (l.type === 'fill' && /water/.test(id)) map.setPaintProperty(id, 'fill-color', '#05070f')
-      else if (l.type === 'fill' && /(park|pitch|golf|grass|wood|national)/.test(id)) { map.setPaintProperty(id, 'fill-color', '#0a1a10'); map.setPaintProperty(id, 'fill-opacity', 0.8) }
-      else if (l.type === 'fill' && /(landuse|land-structure)/.test(id)) map.setPaintProperty(id, 'fill-color', '#120913')
-      else if ((l.type === 'fill' || l.type === 'fill-extrusion') && /building/.test(id)) { map.setPaintProperty(id, `${l.type}-color`, '#3a1430'); map.setPaintProperty(id, `${l.type}-opacity`, 0.35) }
-      else if (l.type === 'line' && /(motorway|trunk)/.test(id) && !/case|label/.test(id)) { map.setPaintProperty(id, 'line-color', '#ff8a3d'); map.setPaintProperty(id, 'line-opacity', 0.7) }
-      else if (l.type === 'line' && /(primary|secondary|tertiary|major|road-simple)/.test(id) && !/case|label/.test(id)) { map.setPaintProperty(id, 'line-color', '#ff1e79'); map.setPaintProperty(id, 'line-opacity', 0.55) }
-      else if (l.type === 'line' && /(road|street|path|minor|service|bridge|tunnel)/.test(id) && !/label/.test(id)) { map.setPaintProperty(id, 'line-color', /case/.test(id) ? '#2a1220' : '#00e5d0'); map.setPaintProperty(id, 'line-opacity', /case/.test(id) ? 0.6 : 0.3) }
-      else if (l.type === 'line' && /(admin|boundary)/.test(id)) map.setPaintProperty(id, 'line-color', 'rgba(255,30,121,.25)')
-      else if (l.type === 'symbol') { map.setPaintProperty(id, 'text-color', '#9a7488'); map.setPaintProperty(id, 'text-halo-color', '#08010a'); map.setPaintProperty(id, 'text-halo-width', 1) }
+      if (l.type === 'line' && /(motorway|trunk)/.test(id) && !/label/.test(id)) {
+        if (/case/.test(id)) { map.setPaintProperty(id, 'line-color', '#7a4a10'); map.setPaintProperty(id, 'line-opacity', 0.6) }
+        else { map.setPaintProperty(id, 'line-color', LEONIDA.highway); map.setPaintProperty(id, 'line-opacity', 0.95) }
+      } else if (l.type === 'line' && /^(road|bridge|tunnel)/.test(id) && !/(label|rail|ferry|path|steps|pedestrian)/.test(id)) {
+        if (/case/.test(id)) { map.setPaintProperty(id, 'line-color', '#1a0a20'); map.setPaintProperty(id, 'line-opacity', 0.5) }
+        else { map.setPaintProperty(id, 'line-color', LEONIDA.road); map.setPaintProperty(id, 'line-opacity', /(street|minor|service|link)/.test(id) ? 0.45 : 0.85) }
+      } else if (l.type === 'line' && /rail/.test(id)) { map.setPaintProperty(id, 'line-color', LEONIDA.rail); map.setPaintProperty(id, 'line-opacity', 0.35) }
+      else if (l.type === 'line' && /(path|steps|pedestrian)/.test(id)) { map.setPaintProperty(id, 'line-color', LEONIDA.road); map.setPaintProperty(id, 'line-opacity', 0.25) }
+      else if (l.type === 'line' && /(admin|boundary)/.test(id)) { map.setPaintProperty(id, 'line-color', 'rgba(255,42,138,.45)') }
+      else if (l.type === 'symbol') {
+        const water = /(water|waterway|ocean|sea|bay)/.test(id)
+        map.setPaintProperty(id, 'text-color', water ? LEONIDA.water_label : LEONIDA.label)
+        map.setPaintProperty(id, 'text-halo-color', LEONIDA.labelHalo); map.setPaintProperty(id, 'text-halo-width', 1.4)
+        if (/settlement|place|state|country|natural|airport|poi/.test(id)) {
+          map.setLayoutProperty(id, 'text-transform', 'uppercase'); map.setLayoutProperty(id, 'text-letter-spacing', 0.18)
+        }
+        if (/road|street/.test(id)) map.setLayoutProperty(id, 'visibility', 'none')
+        if (/poi/.test(id)) map.setPaintProperty(id, 'icon-opacity', 0)
+        if (water) map.setLayoutProperty(id, 'text-letter-spacing', 0.3)
+      }
     } catch { /* property not applicable to this layer */ }
   }
 }
@@ -69,7 +95,7 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
   useEffect(() => {
     if (!TOKEN || !box.current || mapRef.current) return
     mapboxgl.accessToken = TOKEN
-    const map = new mapboxgl.Map({ container: box.current, style: 'mapbox://styles/mapbox/dark-v11', center: DEFAULT_CENTER, zoom: 12, attributionControl: false, logoPosition: 'bottom-left' })
+    const map = new mapboxgl.Map({ container: box.current, style: 'mapbox://styles/mapbox/satellite-streets-v12', center: DEFAULT_CENTER, zoom: 12, attributionControl: false, logoPosition: 'bottom-left' })
     map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right')
     map.on('style.load', () => { restyle(map); setReady(true) })
     map.on('move', () => setSel((s) => (s ? { ...s, tick: Date.now() } : s)))
@@ -125,6 +151,7 @@ export default function LiveMap({ crew, mine, others, members, loading, error, o
         <div className="nomap"><div><b>Map unavailable</b>Mapbox token isn’t configured for this build.</div></div>
       )}
       {TOKEN && error && <div className="nomap"><div><b>Couldn’t load crew locations</b><button className="link" onClick={onReload}>Retry</button></div></div>}
+      <div className="wash"></div>
       <div className="scan"></div>
       <div className="vig"></div>
 
