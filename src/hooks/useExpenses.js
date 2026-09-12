@@ -12,7 +12,7 @@ export function useExpenses(crewId, userId) {
     setError(null)
     const [b, r] = await Promise.all([
       supabase.from('crew_balances').select('user_id, balance').eq('crew_id', crewId),
-      supabase.from('expenses').select('id, title, amount, created_at, paid_by, trip_id, profiles(display_name), expense_shares(count)')
+      supabase.from('expenses').select('id, title, amount, created_at, paid_by, trip_id, profiles!expenses_paid_by_fkey(display_name), expense_shares(count)')
         .eq('crew_id', crewId).order('created_at', { ascending: false }).limit(5),
     ])
     if (b.error || r.error) { setError(b.error || r.error); setBalances([]); setRecent([]); return }

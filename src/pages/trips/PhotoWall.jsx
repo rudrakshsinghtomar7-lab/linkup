@@ -18,7 +18,7 @@ export default function PhotoWall({ trip, data }) {
   const [all, setAll] = useState(false)
 
   async function pick(e) {
-    const files = e.target.files
+    const files = Array.from(e.target.files) // copy before clearing — the FileList is live
     e.target.value = ''
     try { await upload(files); toast('Uploaded', 'ok') } catch (err) { toast(err.message || 'Upload failed. Try again.') }
   }
