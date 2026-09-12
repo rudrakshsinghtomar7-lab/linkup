@@ -18,7 +18,7 @@ export default function Login() {
     setBusy(true); setError('')
     const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } })
     setBusy(false)
-    if (error) return setError(friendly(error, 'Couldn’t send the link. Check the address and try again.'))
+    if (error) return setError(error.code === 'over_email_send_rate_limit' ? 'Email limit hit for now. If you already have a code, enter it below.' : friendly(error, 'Couldn’t send the link. Check the address and try again.'))
     setSent(true)
   }
 
@@ -44,6 +44,7 @@ export default function Login() {
             </label>
             {error && <div className="state err">{error}</div>}
             <button className="btn primary" disabled={busy || !email}>{busy ? 'Sending…' : 'Send magic link'}</button>
+            <div className="sub">Already have a code?<button type="button" className="link" disabled={!email} onClick={() => { setSent(true); setError('') }}>Enter it</button></div>
           </form>
         ) : (
           <form onSubmit={verify}>
