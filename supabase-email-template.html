@@ -1,0 +1,8 @@
+<!-- Supabase → Authentication → Email Templates → Magic Link.
+     The link only OPENS LinkUp; the app verifies on a button press so inbox link
+     scanners can't consume the one-time token. {{ .RedirectTo }} is the app URL that
+     requested the link (falls back to the Site URL). -->
+<h2>Sign in to LinkUp</h2>
+<p><a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=magiclink">Open LinkUp and confirm sign-in</a></p>
+<p>Or type this code in the app: <strong style="font-size:22px;letter-spacing:4px">{{ .Token }}</strong></p>
+<p>This link and code expire in an hour. If you didn't ask for it, ignore this email.</p>
