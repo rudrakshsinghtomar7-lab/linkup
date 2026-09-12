@@ -18,7 +18,7 @@ function useCountdown(startDate) {
   return t
 }
 
-export default function Hero({ trip, going, onNewTrip }) {
+export default function Hero({ trip, going, loading, onNewTrip }) {
   const c = useCountdown(trip?.start_date)
   return (
     <section className="hero">
@@ -33,6 +33,12 @@ export default function Hero({ trip, going, onNewTrip }) {
               {trip.start_date && <span>🗓 {fmtDate(trip.start_date)}{trip.end_date && trip.end_date !== trip.start_date ? ` – ${fmtDate(trip.end_date)}` : ''}</span>}
               <span>👥 {going} going</span>
             </div>
+          </div>
+        ) : loading ? (
+          <div>
+            <div className="kick">Loading your trip</div>
+            <h1>&nbsp;</h1>
+            <div className="meta"><span>&nbsp;</span></div>
           </div>
         ) : (
           <div>

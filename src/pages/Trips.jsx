@@ -78,7 +78,7 @@ export default function Trips() {
           <button className="btn primary" onClick={() => setNewPlan(true)}>＋ New plan</button>
         </div>
 
-        <Hero trip={trip} going={members.length} onNewTrip={() => setNewTrip(true)} />
+        <Hero trip={trip} loading={trips.trips === null} going={members.length} onNewTrip={() => setNewTrip(true)} />
 
         <div className="grid">
           <Places trip={trip} data={places} />
