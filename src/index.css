@@ -133,6 +133,9 @@ button,input,select,textarea{font-family:inherit}
      env(safe-area-inset-*) needs viewport-fit=cover (set in index.html). */
   .app{display:flex;flex-direction:column;position:fixed;inset:0;height:100dvh;min-height:0;overflow:hidden;
     padding-top:env(safe-area-inset-top,0px)}
+  /* Solid strip behind the iOS status bar / Dynamic Island so the page glow doesn't haze it. */
+  .app::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--void);z-index:60}
+  .gate{padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
   .main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
     padding:14px 14px calc(96px + env(safe-area-inset-bottom,0px))}
   .main::-webkit-scrollbar{display:none}
