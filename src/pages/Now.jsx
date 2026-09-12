@@ -92,7 +92,7 @@ export default function Now() {
             <button onClick={() => nav('/trips')}>TRIPS</button>
           </div>
           <div className="spacer"></div>
-          <Stack people={members.filter((m) => m.id !== user.id)} max={3} onClick={() => setCrewMenu(true)} />
+          <Stack people={members} max={4} onClick={() => setCrewMenu(true)} />
           <button className={`btn ghost-btn ${ghost ? 'active' : ''}`} disabled={loc.saving} onClick={toggleGhost}>{ghost ? '👻 Ghost on' : '👻 Ghost mode'}</button>
           <button className="btn primary" onClick={() => setDrop(true)}>＋ Drop a plan</button>
         </div>

@@ -72,9 +72,15 @@ export function SessionProvider({ children }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' }) // this device only, like Acedex — don't kill other devices' sessions
     setProfile(null); setCrews(null); setActiveCrewId(null); setMembers([])
   }, [])
+
+  // Auth helpers (Acedex pattern)
+  const signIn = useCallback((email, password) => supabase.auth.signInWithPassword({ email, password }), [])
+  const signUp = useCallback((email, password, meta = {}) => supabase.auth.signUp({ email, password, options: { data: meta } }), [])
+  const requestPasswordReset = useCallback((email, redirectTo) => supabase.auth.resetPasswordForEmail(email, { redirectTo }), [])
+  const updatePassword = useCallback((password) => supabase.auth.updateUser({ password }), [])
 
   const value = useMemo(() => ({
     session, user, profile, reloadProfile: loadProfile,
@@ -83,8 +89,8 @@ export function SessionProvider({ children }) {
     activeCrew: crews?.find((c) => c.id === activeCrewId) ?? null,
     selectCrew, members, membersError, reloadMembers: loadMembers,
     me: members.find((m) => m.id === user?.id) ?? (profile ? { id: user?.id, ...profile } : null),
-    signOut,
-  }), [session, user, profile, loadProfile, crews, loadCrews, activeCrewId, selectCrew, members, membersError, loadMembers, signOut])
+    signOut, signIn, signUp, requestPasswordReset, updatePassword,
+  }), [session, user, profile, loadProfile, crews, loadCrews, activeCrewId, selectCrew, members, membersError, loadMembers, signOut, signIn, signUp, requestPasswordReset, updatePassword])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

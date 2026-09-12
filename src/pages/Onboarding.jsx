@@ -25,7 +25,8 @@ export default function Onboarding() {
 
   // The DB trigger pre-fills display_name from the email; offer it as the starting value.
   useEffect(() => {
-    if (profile?.display_name && !name) setName(profile.display_name)
+    const fromSignup = user?.user_metadata?.display_name
+    if ((fromSignup || profile?.display_name) && !name) setName(fromSignup || profile.display_name)
     if (profile?.color && SWATCHES.includes(profile.color)) setColor(profile.color)
   }, [profile]) // eslint-disable-line react-hooks/exhaustive-deps
 
