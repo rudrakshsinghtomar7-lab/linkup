@@ -16,13 +16,9 @@ export default function CrewGate() {
   async function create(e) {
     e.preventDefault()
     setBusy(true); setError('')
-    // The creator isn't a member until the second insert, and the crews SELECT policy
-    // is membership-based — so mint the id here and don't ask for RETURNING.
-    const id = crypto.randomUUID()
-    const { error: cErr } = await supabase.from('crews').insert({ id, name: name.trim(), created_by: user.id })
+    // create_crew() (security definer) inserts the crew + owner membership atomically.
+    const { data: id, error: cErr } = await supabase.rpc('create_crew', { crew_name: name.trim() })
     if (cErr) { setBusy(false); return setError(friendly(cErr, 'Couldn’t create the crew. Try again.')) }
-    const { error: mErr } = await supabase.from('crew_members').insert({ crew_id: id, user_id: user.id, role: 'owner' })
-    if (mErr) { setBusy(false); return setError(friendly(mErr, 'Crew created, but joining it failed. Try again.')) }
     const { data, error: rErr } = await supabase.from('crews').select('id, name, invite_code').eq('id', id).single()
     setBusy(false)
     if (rErr) return setError(friendly(rErr, 'Crew created, but couldn’t load it. Refresh.'))
